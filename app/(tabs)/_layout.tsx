@@ -1,21 +1,28 @@
-// template
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
-import { SymbolView } from "expo-symbols";
 import { Platform, StyleSheet, useColorScheme } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 
 import Colors from "@/constants/colors";
 
-//IMPORTANT: iOS 26 Exists, feel free to use NativeTabs for native tabs with liquid glass support.
 function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
+        <Icon sf={{ default: "location", selected: "location.fill" }} />
+        <Label>Feed</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="business">
+        <Icon sf={{ default: "storefront", selected: "storefront.fill" }} />
+        <Label>Business</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <Icon sf={{ default: "person", selected: "person.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -24,21 +31,32 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const theme = isDark ? Colors.dark : Colors.light;
+  const insets = useSafeAreaInsets();
+
+  const tabBarHeight = Platform.OS === "web" ? 84 : undefined;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarActiveTintColor: theme.tint,
+        tabBarInactiveTintColor: theme.tabIconDefault,
         headerShown: true,
+        headerStyle: {
+          backgroundColor: theme.surface,
+        },
+        headerTintColor: theme.text,
         tabBarStyle: {
-          position: "absolute",
+          position: "absolute" as const,
           backgroundColor: Platform.select({
             ios: "transparent",
-            android: isDark ? "#000" : "#fff",
+            android: theme.surface,
+            web: theme.surface,
           }),
           borderTopWidth: 0,
           elevation: 0,
+          height: tabBarHeight,
+          ...(Platform.OS === "web" ? { paddingBottom: 34 } : {}),
         },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
@@ -53,9 +71,27 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Local Feed",
           tabBarIcon: ({ color }) => (
-            <SymbolView name="house" tintColor={color} size={24} />
+            <Feather name="map-pin" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="business"
+        options={{
+          title: "Business",
+          tabBarIcon: ({ color }) => (
+            <Feather name="briefcase" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => (
+            <Feather name="user" size={22} color={color} />
           ),
         }}
       />
