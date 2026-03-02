@@ -133,6 +133,15 @@ export default function SettingsScreen() {
       )}
 
       <Pressable
+        style={[styles.menuItem, { backgroundColor: theme.surface }]}
+        onPress={() => router.push("/info")}
+      >
+        <Feather name="info" size={20} color={theme.tint} />
+        <Text style={[styles.menuText, { color: theme.text }]}>About & Help Guide</Text>
+        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      </Pressable>
+
+      <Pressable
         style={[styles.logoutBtn, { backgroundColor: theme.danger + "15" }]}
         onPress={logout}
       >
@@ -140,9 +149,14 @@ export default function SettingsScreen() {
         <Text style={[styles.logoutText, { color: theme.danger }]}>Sign Out</Text>
       </Pressable>
 
-      <Text style={[styles.version, { color: theme.textSecondary }]}>
-        Local Buzz v1.0.0 - Open Source
-      </Text>
+      <View style={styles.creditFooter}>
+        <Text style={[styles.creditText, { color: theme.textSecondary }]}>
+          Crafted with ❤️ by Tapas Khandual
+        </Text>
+        <Text style={[styles.version, { color: theme.textSecondary }]}>
+          Local Buzz v1.0.0 — Open Source
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -235,5 +249,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutText: { fontSize: 16, fontWeight: "600" as const },
-  version: { fontSize: 12, textAlign: "center" as const, marginTop: 24 },
+  creditFooter: {
+    alignItems: "center",
+    paddingVertical: 24,
+    gap: 6,
+  },
+  creditText: { fontSize: 15, fontWeight: "600" as const },
+  version: { fontSize: 12, textAlign: "center" as const },
 });

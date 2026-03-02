@@ -22,12 +22,12 @@ const CATEGORY_ICONS: Record<string, string> = {
   safety: "shield",
 };
 
-const REACTION_LABELS: Record<string, string> = {
-  like: "thumbs-up",
-  helpful: "award",
-  funny: "smile",
-  warning: "alert-circle",
-};
+const REACTIONS = [
+  { type: "like", icon: "thumbs-up", label: "Like" },
+  { type: "helpful", icon: "award", label: "Helpful" },
+  { type: "funny", icon: "smile", label: "Funny" },
+  { type: "warning", icon: "alert-circle", label: "Warning" },
+];
 
 interface MessageItem {
   id: string;
@@ -141,13 +141,14 @@ export default function FeedScreen() {
         <Text style={[styles.content, { color: theme.text }]}>{item.content}</Text>
 
         <View style={styles.cardActions}>
-          {Object.entries(REACTION_LABELS).map(([type, icon]) => (
+          {REACTIONS.map((r) => (
             <Pressable
-              key={type}
+              key={r.type}
               style={[styles.reactionBtn, { backgroundColor: theme.background }]}
-              onPress={() => reactMutation.mutate({ messageId: item.id, type })}
+              onPress={() => reactMutation.mutate({ messageId: item.id, type: r.type })}
             >
-              <Feather name={icon as any} size={14} color={theme.textSecondary} />
+              <Feather name={r.icon as any} size={14} color={theme.textSecondary} />
+              <Text style={[styles.reactionLabel, { color: theme.textSecondary }]}>{r.label}</Text>
             </Pressable>
           ))}
           <View style={{ flex: 1 }} />
@@ -157,10 +158,11 @@ export default function FeedScreen() {
             </Text>
           )}
           <Pressable
-            style={[styles.reactionBtn, { backgroundColor: theme.background }]}
+            style={[styles.reactionBtn, { backgroundColor: "#ef444415" }]}
             onPress={() => reportMutation.mutate({ messageId: item.id, reason: "inappropriate" })}
           >
-            <Feather name="flag" size={14} color={theme.textSecondary} />
+            <Feather name="flag" size={14} color="#ef4444" />
+            <Text style={[styles.reactionLabel, { color: "#ef4444" }]}>Report</Text>
           </Pressable>
         </View>
       </View>
@@ -273,11 +275,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   reactionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  reactionLabel: {
+    fontSize: 11,
+    fontWeight: "500" as const,
   },
   likeCount: { fontSize: 13, fontWeight: "500" as const },
   emptyTitle: { fontSize: 20, fontWeight: "700" as const },

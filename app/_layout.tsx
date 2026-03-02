@@ -55,6 +55,10 @@ function RootLayoutNav() {
         name="moderation"
         options={{ title: "Moderation" }}
       />
+      <Stack.Screen
+        name="info"
+        options={{ title: "About Local Buzz" }}
+      />
     </Stack>
   );
 }
