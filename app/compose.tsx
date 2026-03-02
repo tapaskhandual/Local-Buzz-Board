@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { useLocation } from "@/lib/location-context";
 import { authPost } from "@/lib/api";
+import { showInterstitial } from "@/components/AdInterstitial";
 import Colors from "@/constants/colors";
 
 const CATEGORIES = [
@@ -35,6 +36,7 @@ export default function ComposeScreen() {
       authPost("/api/messages", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/nearby"] });
+      showInterstitial();
       router.back();
     },
     onError: (err: any) => setError(err.message),

@@ -47,6 +47,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Local Buzz to use your location."
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-8601548769874186~XXXXXXXXXX"
+        }
       ]
     ],
     "experiments": {

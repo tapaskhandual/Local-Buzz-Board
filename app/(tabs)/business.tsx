@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import { useLocation } from "@/lib/location-context";
 import { useAuth } from "@/lib/auth-context";
 import { authGet, authPost, authPut } from "@/lib/api";
+import { AdBanner } from "@/components/AdBanner";
 import Colors from "@/constants/colors";
 
 interface BusinessPostItem {
@@ -133,7 +134,9 @@ export default function BusinessScreen() {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.tint} />
         }
         ListHeaderComponent={
-          profile && (
+          <>
+            <AdBanner style={{ marginBottom: 8 }} />
+            {profile && (
             <View style={[styles.ownerBanner, { backgroundColor: theme.accent }]}>
               <Feather name="briefcase" size={16} color={theme.tint} />
               <Text style={[styles.ownerText, { color: theme.text }]}>
@@ -157,7 +160,8 @@ export default function BusinessScreen() {
                 </Pressable>
               )}
             </View>
-          )
+          )}
+          </>
         }
         ListEmptyComponent={
           isLoading ? (

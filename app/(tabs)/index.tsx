@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet, Text, View, FlatList, Pressable, RefreshControl,
   useColorScheme, Platform, ActivityIndicator,
@@ -10,6 +10,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation } from "@/lib/location-context";
 import { authGet, authPost } from "@/lib/api";
+import { AdBanner } from "@/components/AdBanner";
+import { loadInterstitial } from "@/components/AdInterstitial";
 import Colors from "@/constants/colors";
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -51,6 +53,10 @@ export default function FeedScreen() {
   const queryClient = useQueryClient();
 
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+
+  useEffect(() => {
+    loadInterstitial();
+  }, []);
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["/api/messages/nearby", location?.latitude, location?.longitude],
@@ -183,6 +189,7 @@ export default function FeedScreen() {
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.tint} />
         }
+        ListHeaderComponent={<AdBanner style={{ marginBottom: 8 }} />}
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.center}>
