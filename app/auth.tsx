@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import {
   StyleSheet, Text, View, TextInput, Pressable,
-  ActivityIndicator, useColorScheme, Platform, Alert,
+  ActivityIndicator, useColorScheme, Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useAuth } from "@/lib/auth-context";
 import Colors from "@/constants/colors";
 
@@ -49,7 +50,15 @@ export default function AuthScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + webTopInset }]}>
+    <KeyboardAwareScrollViewCompat
+      style={[styles.scrollContainer, { backgroundColor: theme.background }]}
+      contentContainerStyle={[
+        styles.container,
+        { paddingTop: insets.top + webTopInset + 40, paddingBottom: insets.bottom + 40 },
+      ]}
+      bottomOffset={20}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <Feather name="radio" size={48} color={theme.tint} />
         <Text style={[styles.title, { color: theme.text }]}>Local Buzz</Text>
@@ -116,13 +125,16 @@ export default function AuthScreen() {
           </Text>
         </Pressable>
       </View>
-    </View>
+    </KeyboardAwareScrollViewCompat>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
   },
