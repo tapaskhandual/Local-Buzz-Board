@@ -1,0 +1,45 @@
+Web Service
+Local-Buzz-Board
+Node
+Free
+Upgrade your instance
+
+Connect
+
+Manual Deploy
+Service ID:
+srv-d6m8qrk50q8c73aanjig
+
+tapaskhandual / Local-Buzz-Board
+main
+https://local-buzz-board.onrender.com
+
+Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more.
+Upgrade now
+
+Filter events31
+Deploy live for 26d1a2b: Update build process to include development dependencies and ensure script execution Modify package.json to use `npx patch-package` in postinstall script and update render.yaml to include dev dependencies during the build process. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: e69aaa11-c81f-4f72-9219-136b0d887a56 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+March 8, 2026 at 2:28 AM
+Deploy started for 26d1a2b: Update build process to include development dependencies and ensure script execution Modify package.json to use `npx patch-package` in postinstall script and update render.yaml to include dev dependencies during the build process. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: e69aaa11-c81f-4f72-9219-136b0d887a56 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+Build command updated
+March 8, 2026 at 2:27 AM
+Deploy live for 26d1a2b: Update build process to include development dependencies and ensure script execution Modify package.json to use `npx patch-package` in postinstall script and update render.yaml to include dev dependencies during the build process. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: e69aaa11-c81f-4f72-9219-136b0d887a56 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+March 8, 2026 at 2:27 AM
+Deploy started for 26d1a2b: Update build process to include development dependencies and ensure script execution Modify package.json to use `npx patch-package` in postinstall script and update render.yaml to include dev dependencies during the build process. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: e69aaa11-c81f-4f72-9219-136b0d887a56 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+New commit via Auto-Deploy
+March 8, 2026 at 2:25 AM
+Deploy failed for 720afc0: Update server build script to use npx esbuild Modify the package.json file to update the server:build script to use `npx esbuild` and include path alias support for shared modules. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: a212e92f-7634-43a6-b245-a3f102eb9275 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+Exited with status 127 while building your code. Check your deploy logs for more information.
+March 8, 2026 at 2:18 AM
+
+Rollback
+Deploy started for 720afc0: Update server build script to use npx esbuild Modify the package.json file to update the server:build script to use `npx esbuild` and include path alias support for shared modules. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: a212e92f-7634-43a6-b245-a3f102eb9275 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+New commit via Auto-Deploy
+March 8, 2026 at 2:17 AM
+Deploy failed for a8711e4: Update image asset for visual improvements Update image asset attached_assets/image_1772915533165.png. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: 55360124-1e03-4239-8c5f-9564eae66678 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+Exited with status 127 while building your code. Check your deploy logs for more information.
+March 8, 2026 at 2:11 AM
+
+Rollback
+First deploy started for a8711e4: Update image asset for visual improvements Update image asset attached_assets/image_1772915533165.png. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 58d73efb-6e21-45b5-82fa-82359e6daad8 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: 55360124-1e03-4239-8c5f-9564eae66678 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/517a9b15-c1e9-4797-8531-862a5e8da73b/58d73efb-6e21-45b5-82fa-82359e6daad8/2dGLkRi Replit-Helium-Checkpoint-Created: true
+March 8, 2026 at 2:11 AM
