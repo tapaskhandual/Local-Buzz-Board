@@ -277,10 +277,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subscriptions/activate", authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
-      const { type, tier, purchaseToken } = req.body;
+      const { type, tier, purchaseToken, revenuecatId } = req.body;
       if (!type || !tier) return res.status(400).json({ message: "type and tier required" });
       if (!["user", "business"].includes(type)) return res.status(400).json({ message: "type must be user or business" });
       if (!["monthly", "yearly", "lifetime"].includes(tier)) return res.status(400).json({ message: "Invalid tier" });
+
+      const rcSecret = process.env.REVENUECAT_API_SECRET;
+      if (rcSecret) {
+        if (!revenuecatId) {
+          return res.status(400).json({ message: "revenuecatId is required for subscription verification" });
+        }
+        try {
+          const rcRes = await fetch(`https://api.revenuecat.com/v1/subscribers/${revenuecatId}`, {
+            headers: { Authorization: `Bearer ${rcSecret}` },
+          });
+          if (!rcRes.ok) {
+            return res.status(502).json({ message: "Failed to verify subscription with RevenueCat" });
+          }
+          const rcData = await rcRes.json();
+          const appUserId = rcData?.subscriber?.original_app_user_id;
+          if (appUserId !== String(req.userId)) {
+            return res.status(403).json({ message: "Subscription does not belong to this user" });
+          }
+          const entitlements = rcData?.subscriber?.entitlements || {};
+          const premium = entitlements["premium"];
+          if (!premium || (premium.expires_date && new Date(premium.expires_date) < new Date())) {
+            return res.status(403).json({ message: "No active subscription found in RevenueCat" });
+          }
+        } catch (rcError) {
+          console.error("RevenueCat verification error:", rcError);
+          return res.status(502).json({ message: "RevenueCat verification failed" });
+        }
+      }
+
       await storage.activateSubscription(req.userId!, type, tier, purchaseToken);
       const user = await storage.getUserById(req.userId!);
       return res.json({ message: "Subscription activated", user: { id: user!.id, isPremium: user!.isPremium, premiumTier: user!.premiumTier } });

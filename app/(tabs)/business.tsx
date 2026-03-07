@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useLocation } from "@/lib/location-context";
 import { useAuth } from "@/lib/auth-context";
+import { usePurchases } from "@/lib/purchases-context";
 import { authGet, authPost, authPut } from "@/lib/api";
 import { AdBanner } from "@/components/AdBanner";
 import Colors from "@/constants/colors";
@@ -74,6 +75,8 @@ export default function BusinessScreen() {
     },
     onError: (err: any) => setError(err.message),
   });
+
+  const { offerings, purchasePackage, loading: purchaseLoading, isReady: purchasesReady } = usePurchases();
 
   const activateSubMutation = useMutation({
     mutationFn: (tier: string) =>
@@ -153,7 +156,17 @@ export default function BusinessScreen() {
               ) : (
                 <Pressable
                   style={[styles.smallBtn, { backgroundColor: theme.premium }]}
-                  onPress={() => activateSubMutation.mutate("monthly")}
+                  onPress={() => {
+                    if (purchasesReady && offerings?.availablePackages?.length > 0) {
+                      const monthlyPkg = offerings.availablePackages.find(
+                        (p: any) => p.packageType === "$rc_monthly" || p.identifier === "$rc_monthly"
+                      ) || offerings.availablePackages[0];
+                      purchasePackage(monthlyPkg);
+                    } else {
+                      activateSubMutation.mutate("monthly");
+                    }
+                  }}
+                  disabled={purchaseLoading}
                 >
                   <Feather name="star" size={14} color="#fff" />
                   <Text style={styles.smallBtnText}>Subscribe</Text>

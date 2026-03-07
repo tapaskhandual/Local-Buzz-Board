@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import {
   StyleSheet, Text, View, Pressable, useColorScheme,
-  TextInput, ScrollView, Platform, Alert,
+  TextInput, ScrollView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
+import { usePurchases } from "@/lib/purchases-context";
 import { authPut, authPost } from "@/lib/api";
 import Colors from "@/constants/colors";
 
@@ -32,6 +33,8 @@ export default function SettingsScreen() {
       setEditingName(false);
     },
   });
+
+  const { offerings, purchasePackage, restorePurchases, loading: purchaseLoading, isReady: purchasesReady } = usePurchases();
 
   const activateSubMutation = useMutation({
     mutationFn: (tier: string) => authPost("/api/subscriptions/activate", { type: "user", tier }),
@@ -96,28 +99,61 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionDesc, { color: theme.textSecondary }]}>
             See messages from up to 25 miles away instead of 5 miles.
           </Text>
-          <View style={styles.subOptions}>
-            {[
-              { tier: "monthly", label: "Monthly", price: "$2.99/mo" },
-              { tier: "yearly", label: "Yearly", price: "$19.99/yr" },
-              { tier: "lifetime", label: "Lifetime", price: "$49.99" },
-            ].map((opt) => (
-              <Pressable
-                key={opt.tier}
-                style={({ pressed }) => [
-                  styles.subOption,
-                  { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
-                ]}
-                onPress={() => activateSubMutation.mutate(opt.tier)}
-              >
-                <Text style={[styles.subLabel, { color: theme.text }]}>{opt.label}</Text>
-                <Text style={[styles.subPrice, { color: theme.tint }]}>{opt.price}</Text>
+          {purchasesReady && offerings?.availablePackages?.length > 0 ? (
+            <>
+              <View style={styles.subOptions}>
+                {offerings.availablePackages.map((pkg: any) => (
+                  <Pressable
+                    key={pkg.identifier}
+                    style={({ pressed }) => [
+                      styles.subOption,
+                      { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
+                    ]}
+                    onPress={() => purchasePackage(pkg)}
+                    disabled={purchaseLoading}
+                  >
+                    {purchaseLoading ? (
+                      <ActivityIndicator size="small" color={theme.tint} />
+                    ) : (
+                      <>
+                        <Text style={[styles.subLabel, { color: theme.text }]}>
+                          {pkg.product.title || pkg.identifier}
+                        </Text>
+                        <Text style={[styles.subPrice, { color: theme.tint }]}>
+                          {pkg.product.priceString}
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+              <Pressable onPress={restorePurchases} disabled={purchaseLoading}>
+                <Text style={[styles.subNote, { color: theme.tint }]}>
+                  Restore Purchases
+                </Text>
               </Pressable>
-            ))}
-          </View>
-          <Text style={[styles.subNote, { color: theme.textSecondary }]}>
-            In production, this will use Google Play In-App Purchases.
-          </Text>
+            </>
+          ) : (
+            <View style={styles.subOptions}>
+              {[
+                { tier: "monthly", label: "Monthly", price: "$2.99/mo" },
+                { tier: "yearly", label: "Yearly", price: "$19.99/yr" },
+                { tier: "lifetime", label: "Lifetime", price: "$49.99" },
+              ].map((opt) => (
+                <Pressable
+                  key={opt.tier}
+                  style={({ pressed }) => [
+                    styles.subOption,
+                    { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
+                  ]}
+                  onPress={() => activateSubMutation.mutate(opt.tier)}
+                >
+                  <Text style={[styles.subLabel, { color: theme.text }]}>{opt.label}</Text>
+                  <Text style={[styles.subPrice, { color: theme.tint }]}>{opt.price}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
       )}
 

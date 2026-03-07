@@ -6,9 +6,10 @@ Local Buzz is an open-source hyper-local social networking app where users post 
 ## Architecture
 - **Frontend**: Expo/React Native (Android-focused, cross-platform compatible)
 - **Backend**: Express.js REST API (port 5000, deployable to Render)
-- **Database**: PostgreSQL via Drizzle ORM (Supabase-ready)
+- **Database**: PostgreSQL via Drizzle ORM (Neon PostgreSQL)
 - **Auth**: Username/password with bcrypt hashing, JWT tokens stored in AsyncStorage
 - **Ads**: Google AdMob via react-native-google-mobile-ads (native builds only, no-op on web)
+- **Subscriptions**: RevenueCat via react-native-purchases (native builds only, fallback on web)
 
 ## Project Structure
 ```
@@ -16,9 +17,9 @@ app/                    # Expo Router screens
   (tabs)/               # Tab-based navigation
     _layout.tsx         # Tab bar configuration
     index.tsx           # Local feed tab
-    business.tsx        # Business promotions tab
-    settings.tsx        # Profile & settings tab
-  _layout.tsx           # Root layout with providers
+    business.tsx        # Business promotions tab (RevenueCat purchase)
+    settings.tsx        # Profile & settings tab (RevenueCat purchase)
+  _layout.tsx           # Root layout with providers (AdMob init, PurchasesProvider)
   auth.tsx              # Login/register screen
   compose.tsx           # New message composer
   moderation.tsx        # Moderation panel (moderator+)
@@ -32,13 +33,15 @@ constants/
   ads.ts                # Ad unit IDs and helpers
   colors.ts             # Theme colors (dark navy + coral red)
 lib/
+  admob-init.ts         # AdMob SDK initialization
   api.ts                # Authenticated API helpers
   auth-context.tsx      # Auth state provider
   location-context.tsx  # Location permissions + GPS
+  purchases-context.tsx # RevenueCat provider for in-app purchases
   query-client.ts       # React Query client config
 server/
   index.ts              # Express server entry
-  routes.ts             # All API routes (includes /api/health for Render)
+  routes.ts             # All API routes (includes /api/health, RevenueCat verification)
   storage.ts            # Database operations (Drizzle ORM)
   db.ts                 # Database connection
   templates/landing-page.html  # Static landing page
@@ -52,6 +55,7 @@ shared/
 - **Business promotions**: Separate tab requiring subscription
 - **Moderation**: Role hierarchy (owner > admin > moderator > user), soft-hide only, audit trail, rate limiting
 - **AdMob**: Banner ads on feed/business tabs, interstitial after posting (native builds only)
+- **RevenueCat subscriptions**: Real IAP with server-side verification
 
 ## Database Tables
 users, messages, businessProfiles, businessPosts, reactions, reports, moderationLogs, subscriptions
@@ -66,32 +70,35 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - `npm run expo:dev` — Start Expo dev server on port 8081
 
 ## Deployment Architecture (Production)
-- **Database**: Supabase PostgreSQL — set DATABASE_URL to Supabase connection string
+- **Database**: Neon PostgreSQL — set DATABASE_URL to Neon connection string
 - **Backend**: Render Web Service — uses render.yaml for config, builds with esbuild
 - **Mobile App**: Google Play Store via EAS Build — uses eas.json for config
 
 ## Environment Variables
 ### Backend (Render)
-- `DATABASE_URL` — Supabase PostgreSQL connection string
+- `DATABASE_URL` — Neon PostgreSQL connection string
 - `JWT_SECRET` — Secret key for JWT token signing
 - `PORT` — Server port (default: 5000)
 - `ALLOWED_ORIGINS` — Comma-separated allowed CORS origins
 - `NODE_ENV` — "production" for deployment
+- `REVENUECAT_API_SECRET` — RevenueCat secret API key (for server-side verification)
 
-### Frontend (Expo)
-- `EXPO_PUBLIC_API_URL` — Full URL to the Render backend (e.g., https://local-buzz-api.onrender.com)
+### Frontend (Expo / EAS Build)
+- `EXPO_PUBLIC_API_URL` — Full URL to the Render backend (e.g., https://local-buzz-board.onrender.com)
+- `EXPO_PUBLIC_REVENUECAT_KEY` — RevenueCat public API key (goog_xxx)
 - `EXPO_PUBLIC_DOMAIN` — Legacy fallback, still works for Replit dev
 
 ## Ad Unit IDs (Production)
-- Banner: ca-app-pub-8601548769874186/4837679381
-- Interstitial: ca-app-pub-8601548769874186/7531650124
-- App Open: ca-app-pub-8601548769874186/7858953180
-- Native Advanced: ca-app-pub-8601548769874186/8844731796
+- AdMob Android App ID: ca-app-pub-8601548769874186~1744612186
+- Banner: ca-app-pub-8601548769874186/2793113749
+- Interstitial: ca-app-pub-8601548769874186/6133117597
+- App Open: ca-app-pub-8601548769874186/7314483118
+- Native Advanced: ca-app-pub-8601548769874186/4106195413
 
 ## Notes
 - AdMob requires EAS native build; renders as no-op in Expo Go / web preview
-- Subscriptions are currently mocked via API; real RevenueCat/Google Play IAP to be added for production
-- The `react-native-google-mobile-ads` plugin in app.json only runs during native builds
+- RevenueCat requires EAS native build; falls back to mock activation on web
+- Server-side subscription verification: when REVENUECAT_API_SECRET is set, the server validates purchases against RevenueCat API before activating
 - Platform-specific files (.native.tsx / .web.tsx) prevent native-only modules from crashing web bundling
 - render.yaml is provided for one-click Render deployment (Blueprint)
 - eas.json is configured for dev, preview, and production Android builds

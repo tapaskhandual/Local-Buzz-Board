@@ -8,9 +8,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { LocationProvider } from "@/lib/location-context";
+import { PurchasesProvider } from "@/lib/purchases-context";
+import { initializeAdMob } from "@/lib/admob-init";
 import { ActivityIndicator, View } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
+initializeAdMob();
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
@@ -70,9 +73,11 @@ export default function RootLayout() {
         <GestureHandlerRootView>
           <KeyboardProvider>
             <AuthProvider>
-              <LocationProvider>
-                <RootLayoutNav />
-              </LocationProvider>
+              <PurchasesProvider>
+                <LocationProvider>
+                  <RootLayoutNav />
+                </LocationProvider>
+              </PurchasesProvider>
             </AuthProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>

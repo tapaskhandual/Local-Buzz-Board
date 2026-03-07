@@ -17,3 +17,5 @@ services:
         value: "5000"
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: REVENUECAT_API_SECRET
+        sync: false
