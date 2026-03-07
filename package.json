@@ -26,6 +26,7 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.39.3",
     "drizzle-zod": "^0.7.0",
+    "esbuild": "^0.27.3",
     "expo": "~54.0.27",
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.11",

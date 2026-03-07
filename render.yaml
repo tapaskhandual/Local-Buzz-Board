@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: local-buzz-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run server:build
+    startCommand: npm run server:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: ALLOWED_ORIGINS
+        sync: false

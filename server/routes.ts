@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import * as storage from "./storage";
 import { insertUserSchema, insertMessageSchema, insertBusinessProfileSchema, insertBusinessPostSchema, insertReactionSchema, insertReportSchema } from "@shared/schema";
 
-const JWT_SECRET = process.env.SESSION_SECRET || "local-buzz-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "local-buzz-secret-key";
 const FREE_RADIUS_MILES = 5;
 const PREMIUM_RADIUS_MILES = 25;
 const MOD_RATE_LIMIT = 50;
@@ -47,6 +47,10 @@ function filterContent(content: string): boolean {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  app.get("/api/health", (_req: Request, res: Response) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
 
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {

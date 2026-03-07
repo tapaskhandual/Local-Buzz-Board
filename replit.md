@@ -38,7 +38,7 @@ lib/
   query-client.ts       # React Query client config
 server/
   index.ts              # Express server entry
-  routes.ts             # All API routes
+  routes.ts             # All API routes (includes /api/health for Render)
   storage.ts            # Database operations (Drizzle ORM)
   db.ts                 # Database connection
   templates/landing-page.html  # Static landing page
@@ -61,9 +61,26 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - Accent: #e94560 (coral red)
 - Surface: #16213e
 
-## Running
+## Running (Development)
 - `npm run server:dev` — Start backend on port 5000
 - `npm run expo:dev` — Start Expo dev server on port 8081
+
+## Deployment Architecture (Production)
+- **Database**: Supabase PostgreSQL — set DATABASE_URL to Supabase connection string
+- **Backend**: Render Web Service — uses render.yaml for config, builds with esbuild
+- **Mobile App**: Google Play Store via EAS Build — uses eas.json for config
+
+## Environment Variables
+### Backend (Render)
+- `DATABASE_URL` — Supabase PostgreSQL connection string
+- `JWT_SECRET` — Secret key for JWT token signing
+- `PORT` — Server port (default: 5000)
+- `ALLOWED_ORIGINS` — Comma-separated allowed CORS origins
+- `NODE_ENV` — "production" for deployment
+
+### Frontend (Expo)
+- `EXPO_PUBLIC_API_URL` — Full URL to the Render backend (e.g., https://local-buzz-api.onrender.com)
+- `EXPO_PUBLIC_DOMAIN` — Legacy fallback, still works for Replit dev
 
 ## Ad Unit IDs (Production)
 - Banner: ca-app-pub-8601548769874186/4837679381
@@ -71,13 +88,10 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - App Open: ca-app-pub-8601548769874186/7858953180
 - Native Advanced: ca-app-pub-8601548769874186/8844731796
 
-## Deployment Target
-- Database: Supabase (PostgreSQL)
-- Backend: Render (VPS)
-- App: Google Play Store (EAS Build)
-
 ## Notes
 - AdMob requires EAS native build; renders as no-op in Expo Go / web preview
 - Subscriptions are currently mocked via API; real RevenueCat/Google Play IAP to be added for production
 - The `react-native-google-mobile-ads` plugin in app.json only runs during native builds
 - Platform-specific files (.native.tsx / .web.tsx) prevent native-only modules from crashing web bundling
+- render.yaml is provided for one-click Render deployment (Blueprint)
+- eas.json is configured for dev, preview, and production Android builds
