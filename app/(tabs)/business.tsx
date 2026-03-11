@@ -53,7 +53,15 @@ export default function BusinessScreen() {
 
   const { data: profile } = useQuery({
     queryKey: ["/api/business/profile"],
-    queryFn: () => authGet<any>("/api/business/profile").catch(() => null),
+    queryFn: async () => {
+      try {
+        return await authGet<any>("/api/business/profile");
+      } catch (e: any) {
+        if (e.message === "No business profile") return null;
+        throw e;
+      }
+    },
+    retry: 1,
   });
 
   const createProfileMutation = useMutation({
