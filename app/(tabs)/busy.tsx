@@ -20,6 +20,8 @@ interface BusyArea {
   venueCount: number;
   score: number;
   distance: number;
+  routeDistance: number | null;
+  routeDuration: number | null;
   direction: string;
   venueTypes: Record<string, number>;
   topVenues: string[];
@@ -206,12 +208,23 @@ export default function BusyAreasScreen() {
     });
   }
 
+  function formatDuration(minutes: number): string {
+    if (minutes < 1) return "<1 min";
+    if (minutes < 60) return `${minutes} min`;
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+  }
+
   function renderBusyArea({ item, index }: { item: BusyArea; index: number }) {
     const config = BUSYNESS_CONFIG[item.busynessLevel];
     const venueTypeEntries = Object.entries(item.venueTypes).sort((a, b) => b[1] - a[1]);
-    const distLabel = item.distance < 1
-      ? `${Math.round(item.distance * 5280)}ft`
-      : `${item.distance.toFixed(1)}mi`;
+
+    const showRoute = item.routeDistance != null;
+    const displayDist = showRoute ? item.routeDistance! : item.distance;
+    const distLabel = displayDist < 1
+      ? `${Math.round(displayDist * 5280)}ft`
+      : `${displayDist.toFixed(1)}mi`;
 
     return (
       <Pressable
@@ -234,9 +247,15 @@ export default function BusyAreasScreen() {
 
             <View style={styles.statsRow}>
               <View style={styles.stat}>
-                <Feather name="navigation" size={12} color={theme.textSecondary} />
+                <Feather name={showRoute ? "truck" : "navigation"} size={12} color={theme.textSecondary} />
                 <Text style={[styles.statText, { color: theme.textSecondary }]}>{distLabel} {item.direction}</Text>
               </View>
+              {item.routeDuration != null && (
+                <View style={styles.stat}>
+                  <Feather name="clock" size={12} color={theme.tint} />
+                  <Text style={[styles.statText, { color: theme.tint }]}>{formatDuration(item.routeDuration)} drive</Text>
+                </View>
+              )}
               <View style={styles.stat}>
                 <Feather name="map-pin" size={12} color={theme.textSecondary} />
                 <Text style={[styles.statText, { color: theme.textSecondary }]}>{item.venueCount} venues</Text>

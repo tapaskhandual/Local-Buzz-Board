@@ -33,6 +33,8 @@ interface BusyAreaCluster {
   venueCount: number;
   score: number;
   distance: number;
+  routeDistance: number | null;
+  routeDuration: number | null;
   direction: string;
   venueTypes: Record<string, number>;
   topVenues: string[];
@@ -251,6 +253,8 @@ function clusterPOIs(pois: OverpassPOI[], userLat: number, userLng: number, curr
       venueCount: clusterPois.length,
       score: totalScore,
       distance,
+      routeDistance: null,
+      routeDuration: null,
       direction,
       venueTypes,
       topVenues: venueNames,
@@ -266,6 +270,71 @@ function clusterPOIs(pois: OverpassPOI[], userLat: number, userLng: number, curr
   clusters.sort((a, b) => b.score - a.score);
 
   return clusters.slice(0, 30);
+}
+
+const OSRM_API = "https://router.project-osrm.org";
+
+async function fetchRouteDistances(
+  userLat: number,
+  userLng: number,
+  clusters: BusyAreaCluster[]
+): Promise<BusyAreaCluster[]> {
+  if (clusters.length === 0) return clusters;
+
+  const batchSize = 50;
+  const batches: BusyAreaCluster[][] = [];
+  for (let i = 0; i < clusters.length; i += batchSize) {
+    batches.push(clusters.slice(i, i + batchSize));
+  }
+
+  const results: BusyAreaCluster[] = [];
+
+  for (const batch of batches) {
+    const coords = [`${userLng},${userLat}`, ...batch.map(c => `${c.lng},${c.lat}`)].join(";");
+    const url = `${OSRM_API}/table/v1/driving/${coords}?sources=0&annotations=distance,duration`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        console.log("OSRM table API HTTP error:", response.status);
+        batch.forEach(c => results.push(c));
+        continue;
+      }
+
+      const data = await response.json();
+
+      if (data.code !== "Ok" || !data.distances?.[0] || !data.durations?.[0]) {
+        console.log("OSRM table API non-Ok response:", data.code);
+        batch.forEach(c => results.push(c));
+        continue;
+      }
+      console.log(`OSRM: got route distances for ${batch.length} clusters`);
+
+      const distances = data.distances[0];
+      const durations = data.durations[0];
+
+      batch.forEach((cluster, i) => {
+        const routeDistMeters = distances[i + 1];
+        const routeDurSeconds = durations[i + 1];
+
+        results.push({
+          ...cluster,
+          routeDistance: routeDistMeters != null ? routeDistMeters / 1609.344 : null,
+          routeDuration: routeDurSeconds != null ? Math.round(routeDurSeconds / 60) : null,
+        });
+      });
+    } catch (err: any) {
+      console.log("OSRM fetch error:", err.name === "AbortError" ? "timeout" : err.message);
+      batch.forEach(c => results.push(c));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  return results;
 }
 
 const cache = new Map<string, { data: BusyAreaCluster[]; timestamp: number }>();
@@ -312,12 +381,14 @@ export async function getBusyAreas(lat: number, lng: number, radiusMiles: number
   const pois = await fetchPOIs(lat, lng, radiusMiles);
   const clusters = clusterPOIs(pois, lat, lng, currentHour);
 
-  cache.set(cacheKey, { data: clusters, timestamp: Date.now() });
+  const clustersWithRoutes = await fetchRouteDistances(lat, lng, clusters);
+
+  cache.set(cacheKey, { data: clustersWithRoutes, timestamp: Date.now() });
 
   if (cache.size > 100) {
     const oldestKey = cache.keys().next().value;
     if (oldestKey) cache.delete(oldestKey);
   }
 
-  return clusters;
+  return clustersWithRoutes;
 }

@@ -60,7 +60,7 @@ scripts/
 - **Reaction tracking**: Users see their own reaction highlighted (tinted) on each post; reactions toggle between types.
 - **Business promotions**: Separate tab requiring subscription
 - **Moderation**: Role hierarchy (owner > admin > moderator > user), soft-hide only, audit trail, rate limiting
-- **Busy Areas/Hotspots**: Real-time city hotspot detection using OpenStreetMap POI density (Overpass API, free, no key) with time-of-day busyness scoring. Map view + ranked list. Free: 5mi, Premium: 25mi. Tapping a hotspot opens device maps app. Time-of-day context banner explains scoring.
+- **Busy Areas/Hotspots**: Real-time city hotspot detection using OpenStreetMap POI density (Overpass API, free, no key) with time-of-day busyness scoring. Map view + ranked list. Free: 5mi, Premium: 25mi. Tapping a hotspot opens device maps app. Time-of-day context banner explains scoring. Real driving distances and estimated drive times via OSRM (free, no key).
 - **AdMob**: Banner ads on feed/business tabs, interstitial after posting (native builds only)
 - **RevenueCat subscriptions**: Real IAP with server-side verification; graceful fallback messaging in Expo Go
 - **Password visibility toggle**: Show/hide password on login/signup screen
