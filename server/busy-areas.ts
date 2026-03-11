@@ -269,7 +269,7 @@ function clusterPOIs(pois: OverpassPOI[], userLat: number, userLng: number, curr
 
   clusters.sort((a, b) => b.score - a.score);
 
-  return clusters.slice(0, 30);
+  return clusters;
 }
 
 const OSRM_API = "https://router.project-osrm.org";
@@ -379,9 +379,12 @@ export async function getBusyAreas(lat: number, lng: number, radiusMiles: number
 
   const currentHour = new Date().getHours();
   const pois = await fetchPOIs(lat, lng, radiusMiles);
-  const clusters = clusterPOIs(pois, lat, lng, currentHour);
+  const allClusters = clusterPOIs(pois, lat, lng, currentHour);
 
-  const clustersWithRoutes = await fetchRouteDistances(lat, lng, clusters);
+  const withinRadius = allClusters.filter(c => c.distance <= radiusMiles);
+  const capped = withinRadius.slice(0, 30);
+
+  const clustersWithRoutes = await fetchRouteDistances(lat, lng, capped);
 
   cache.set(cacheKey, { data: clustersWithRoutes, timestamp: Date.now() });
 
