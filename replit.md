@@ -72,9 +72,10 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - **Start Frontend** workflow: `npm run expo:dev` — starts Expo dev server (console, for Expo Go)
 - The backend serves the landing page with QR code at the root URL
 
-## Deployment Architecture (Production)
-- **Database**: Replit managed PostgreSQL (DATABASE_URL set automatically)
-- **Backend**: Replit Deployments — use `npm run server:build && npm run server:prod`
+## Deployment Architecture (Production — Render)
+- **Database**: Neon PostgreSQL (ap-southeast-1 region)
+- **Backend**: Render Web Service — uses render.yaml, builds with esbuild, runs `npm run server:prod`
+- **Env vars on Render**: DATABASE_URL (Neon connection string), JWT_SECRET, NODE_ENV=production, PORT=5000
 - **Mobile App**: Google Play Store via EAS Build — uses eas.json for config
 
 ## Environment Variables
