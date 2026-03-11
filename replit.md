@@ -17,6 +17,7 @@ app/                    # Expo Router screens
   (tabs)/               # Tab-based navigation
     _layout.tsx         # Tab bar configuration
     index.tsx           # Local feed tab
+    busy.tsx            # Busy Areas/Hotspots tab (Overpass API POI density)
     business.tsx        # Business promotions tab (RevenueCat purchase)
     settings.tsx        # Profile & settings tab (RevenueCat purchase)
   _layout.tsx           # Root layout with providers (AdMob init, PurchasesProvider)
@@ -42,6 +43,7 @@ lib/
 server/
   index.ts              # Express server entry
   routes.ts             # All API routes (includes /api/health, RevenueCat verification)
+  busy-areas.ts         # Overpass API integration for busy areas/hotspots
   storage.ts            # Database operations (Drizzle ORM)
   db.ts                 # Database connection
   templates/landing-page.html  # Static landing page
@@ -56,6 +58,7 @@ scripts/
 - **Auto-expiry**: Messages expire after 24 hours; hourly server cleanup job
 - **Business promotions**: Separate tab requiring subscription
 - **Moderation**: Role hierarchy (owner > admin > moderator > user), soft-hide only, audit trail, rate limiting
+- **Busy Areas/Hotspots**: Real-time city hotspot detection using OpenStreetMap POI density (Overpass API, free, no key) with time-of-day busyness scoring. Map view + ranked list. Free: 5mi, Premium: 25mi.
 - **AdMob**: Banner ads on feed/business tabs, interstitial after posting (native builds only)
 - **RevenueCat subscriptions**: Real IAP with server-side verification
 

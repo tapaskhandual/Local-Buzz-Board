@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as storage from "./storage";
+import { getBusyAreas } from "./busy-areas";
 import { insertUserSchema, insertMessageSchema, insertBusinessProfileSchema, insertBusinessPostSchema, insertReactionSchema, insertReportSchema } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "local-buzz-secret-key";
@@ -432,6 +433,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(logs);
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/busy-areas", authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lng = parseFloat(req.query.lng as string);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return res.status(400).json({ message: "Valid lat (-90 to 90) and lng (-180 to 180) are required" });
+      }
+      const user = await storage.getUserById(req.userId!);
+      const radius = user?.isPremium ? PREMIUM_RADIUS_MILES : FREE_RADIUS_MILES;
+      const areas = await getBusyAreas(lat, lng, radius);
+      return res.json({ areas, radius });
+    } catch (error: any) {
+      console.error("Busy areas error:", error.message);
+      if (error.message?.includes("Overpass")) {
+        return res.status(502).json({ message: "Upstream service temporarily unavailable" });
+      }
+      return res.status(500).json({ message: "Failed to fetch busy areas" });
     }
   });
 

@@ -16,6 +16,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "location", selected: "location.fill" }} />
         <Label>Feed</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="busy">
+        <Icon sf={{ default: "flame", selected: "flame.fill" }} />
+        <Label>Hotspots</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="business">
         <Icon sf={{ default: "storefront", selected: "storefront.fill" }} />
         <Label>Business</Label>
@@ -74,6 +78,15 @@ function ClassicTabLayout() {
           title: "Local Feed",
           tabBarIcon: ({ color }) => (
             <Feather name="map-pin" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="busy"
+        options={{
+          title: "Hotspots",
+          tabBarIcon: ({ color }) => (
+            <Feather name="activity" size={22} color={color} />
           ),
         }}
       />
