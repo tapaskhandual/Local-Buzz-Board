@@ -5,8 +5,8 @@ Local Buzz is an open-source hyper-local social networking app where users post 
 
 ## Architecture
 - **Frontend**: Expo/React Native (Android-focused, cross-platform compatible)
-- **Backend**: Express.js REST API (port 5000, deployable to Render)
-- **Database**: PostgreSQL via Drizzle ORM (Neon PostgreSQL)
+- **Backend**: Express.js REST API (port 5000, serves landing page + API)
+- **Database**: PostgreSQL via Drizzle ORM (Replit managed PostgreSQL)
 - **Auth**: Username/password with bcrypt hashing, JWT tokens stored in AsyncStorage
 - **Ads**: Google AdMob via react-native-google-mobile-ads (native builds only, no-op on web)
 - **Subscriptions**: RevenueCat via react-native-purchases (native builds only, fallback on web)
@@ -47,6 +47,8 @@ server/
   templates/landing-page.html  # Static landing page
 shared/
   schema.ts             # Drizzle schema + Zod validators
+scripts/
+  build.js              # Expo static build script (for production/Expo Go QR)
 ```
 
 ## Key Features
@@ -65,28 +67,26 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - Accent: #e94560 (coral red)
 - Surface: #16213e
 
-## Running (Development)
-- `npm run server:dev` — Start backend on port 5000
-- `npm run expo:dev` — Start Expo dev server on port 8081
+## Running on Replit
+- **Start Backend** workflow: `npm run server:dev` — starts backend on port 5000 (webview)
+- **Start Frontend** workflow: `npm run expo:dev` — starts Expo dev server (console, for Expo Go)
+- The backend serves the landing page with QR code at the root URL
 
 ## Deployment Architecture (Production)
-- **Database**: Neon PostgreSQL — set DATABASE_URL to Neon connection string
-- **Backend**: Render Web Service — uses render.yaml for config, builds with esbuild
+- **Database**: Replit managed PostgreSQL (DATABASE_URL set automatically)
+- **Backend**: Replit Deployments — use `npm run server:build && npm run server:prod`
 - **Mobile App**: Google Play Store via EAS Build — uses eas.json for config
 
 ## Environment Variables
-### Backend (Render)
-- `DATABASE_URL` — Neon PostgreSQL connection string
-- `JWT_SECRET` — Secret key for JWT token signing
-- `PORT` — Server port (default: 5000)
-- `ALLOWED_ORIGINS` — Comma-separated allowed CORS origins
-- `NODE_ENV` — "production" for deployment
-- `REVENUECAT_API_SECRET` — RevenueCat secret API key (for server-side verification)
+### Secrets (already configured)
+- `DATABASE_URL` — Replit managed PostgreSQL connection string
+- `SESSION_SECRET` — Used as JWT signing secret (server reads JWT_SECRET || SESSION_SECRET)
+- `REPLIT_DEV_DOMAIN` — Set by Replit automatically
+- `REPLIT_DOMAINS` — Set by Replit automatically
 
-### Frontend (Expo / EAS Build)
-- `EXPO_PUBLIC_API_URL` — Full URL to the Render backend (e.g., https://local-buzz-board.onrender.com)
-- `EXPO_PUBLIC_REVENUECAT_KEY` — RevenueCat public API key (goog_xxx)
-- `EXPO_PUBLIC_DOMAIN` — Legacy fallback, still works for Replit dev
+### Env Vars (shared)
+- `EXPO_PUBLIC_REVENUECAT_KEY` — RevenueCat public API key
+- `REVENUECAT_API_SECRET` — RevenueCat secret API key
 
 ## Ad Unit IDs (Production)
 - AdMob Android App ID: ca-app-pub-8601548769874186~1744612186
@@ -100,5 +100,5 @@ users, messages, businessProfiles, businessPosts, reactions, reports, moderation
 - RevenueCat requires EAS native build; falls back to mock activation on web
 - Server-side subscription verification: when REVENUECAT_API_SECRET is set, the server validates purchases against RevenueCat API before activating
 - Platform-specific files (.native.tsx / .web.tsx) prevent native-only modules from crashing web bundling
-- render.yaml is provided for one-click Render deployment (Blueprint)
 - eas.json is configured for dev, preview, and production Android builds
+- JWT auth uses SESSION_SECRET as fallback (no need to set separate JWT_SECRET)
