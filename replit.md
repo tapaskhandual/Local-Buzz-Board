@@ -102,6 +102,14 @@ users, messages (parentId for replies, replyCount), businessProfiles, businessPo
 - App Open: ca-app-pub-8601548769874186/7314483118
 - Native Advanced: ca-app-pub-8601548769874186/4106195413
 
+## Keyboard Handling
+All screens with text inputs use `KeyboardAvoidingView` (behavior="padding") + `ScrollView` to prevent the keyboard from covering inputs:
+- `app/auth.tsx`: Full-screen login/signup form
+- `app/compose.tsx`: New post composer
+- `app/(tabs)/business.tsx`: Register Business and New Promotion modals
+- `app/(tabs)/index.tsx`: Reply modal
+- Android: `softwareKeyboardLayoutMode: "pan"` set in app.json for better modal keyboard handling
+
 ## Notes
 - AdMob requires EAS native build; renders as no-op in Expo Go / web preview
 - RevenueCat requires EAS native build; falls back to mock activation on web

@@ -22,6 +22,7 @@
     },
     "android": {
       "package": "com.localbuzz.app",
+      "softwareKeyboardLayoutMode": "pan",
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "adaptiveIcon": {
         "backgroundColor": "#1a1a2e",

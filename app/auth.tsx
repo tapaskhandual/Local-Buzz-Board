@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import {
   StyleSheet, Text, View, TextInput, Pressable,
   ActivityIndicator, useColorScheme, Platform,
+  KeyboardAvoidingView, ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useAuth } from "@/lib/auth-context";
 import Colors from "@/constants/colors";
 
@@ -51,95 +51,102 @@ export default function AuthScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   return (
-    <KeyboardAwareScrollViewCompat
-      style={[styles.scrollContainer, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.container,
-        { paddingTop: insets.top + webTopInset + 40, paddingBottom: insets.bottom + 40 },
-      ]}
-      bottomOffset={20}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={[styles.flex, { backgroundColor: theme.background }]}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <View style={styles.header}>
-        <Feather name="radio" size={48} color={theme.tint} />
-        <Text style={[styles.title, { color: theme.text }]}>Local Buzz</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Connect with your neighborhood
-        </Text>
-      </View>
-
-      <View style={[styles.form, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.formTitle, { color: theme.text }]}>
-          {isLogin ? "Welcome Back" : "Create Account"}
-        </Text>
-
-        {!isLogin && (
-          <TextInput
-            style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-            placeholder="Display Name (optional)"
-            placeholderTextColor={theme.textSecondary}
-            value={displayName}
-            onChangeText={setDisplayName}
-            autoCapitalize="words"
-          />
-        )}
-
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-          placeholder="Username"
-          placeholderTextColor={theme.textSecondary}
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-            placeholder="Password"
-            placeholderTextColor={theme.textSecondary}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <Pressable
-            style={styles.eyeButton}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Feather name={showPassword ? "eye-off" : "eye"} size={20} color={theme.textSecondary} />
-          </Pressable>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + webTopInset + 20, paddingBottom: insets.bottom + 80 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Feather name="radio" size={48} color={theme.tint} />
+          <Text style={[styles.title, { color: theme.text }]}>Local Buzz</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+            Connect with your neighborhood
+          </Text>
         </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: theme.tint, opacity: pressed ? 0.9 : 1 },
-          ]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>{isLogin ? "Sign In" : "Sign Up"}</Text>
-          )}
-        </Pressable>
-
-        <Pressable onPress={() => { setIsLogin(!isLogin); setError(""); }}>
-          <Text style={[styles.switchText, { color: theme.tint }]}>
-            {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+        <View style={[styles.form, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.formTitle, { color: theme.text }]}>
+            {isLogin ? "Welcome Back" : "Create Account"}
           </Text>
-        </Pressable>
-      </View>
-    </KeyboardAwareScrollViewCompat>
+
+          {!isLogin && (
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+              placeholder="Display Name (optional)"
+              placeholderTextColor={theme.textSecondary}
+              value={displayName}
+              onChangeText={setDisplayName}
+              autoCapitalize="words"
+            />
+          )}
+
+          <TextInput
+            style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+            placeholder="Username"
+            placeholderTextColor={theme.textSecondary}
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+              placeholder="Password"
+              placeholderTextColor={theme.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Feather name={showPassword ? "eye-off" : "eye"} size={20} color={theme.textSecondary} />
+            </Pressable>
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              { backgroundColor: theme.tint, opacity: pressed ? 0.9 : 1 },
+            ]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>{isLogin ? "Sign In" : "Sign Up"}</Text>
+            )}
+          </Pressable>
+
+          <Pressable onPress={() => { setIsLogin(!isLogin); setError(""); }}>
+            <Text style={[styles.switchText, { color: theme.tint }]}>
+              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
+  flex: {
     flex: 1,
   },
   container: {

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet, Text, View, FlatList, Pressable, RefreshControl,
   useColorScheme, Platform, ActivityIndicator, TextInput, Modal,
+  KeyboardAvoidingView, ScrollView,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -295,57 +296,67 @@ export default function FeedScreen() {
       </Pressable>
 
       <Modal visible={!!replyingTo} animationType="slide" transparent>
-        <View style={styles.replyModalOverlay}>
-          <View style={[styles.replyModalContent, { backgroundColor: theme.surface }]}>
-            <View style={styles.replyModalHeader}>
-              <Text style={[styles.replyModalTitle, { color: theme.text }]}>
-                Reply to {replyingTo?.displayName || replyingTo?.username}
-              </Text>
-              <Pressable onPress={() => { setReplyingTo(null); setReplyContent(""); }}>
-                <Feather name="x" size={24} color={theme.text} />
-              </Pressable>
+        <KeyboardAvoidingView
+          style={styles.replyModalOverlay}
+          behavior="padding"
+        >
+          <ScrollView
+            contentContainerStyle={styles.replyModalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
+            <View style={styles.replyModalSpacer} />
+            <View style={[styles.replyModalContent, { backgroundColor: theme.surface }]}>
+              <View style={styles.replyModalHeader}>
+                <Text style={[styles.replyModalTitle, { color: theme.text }]}>
+                  Reply to {replyingTo?.displayName || replyingTo?.username}
+                </Text>
+                <Pressable onPress={() => { setReplyingTo(null); setReplyContent(""); }}>
+                  <Feather name="x" size={24} color={theme.text} />
+                </Pressable>
+              </View>
+              {replyingTo && (
+                <Text style={[styles.replyOriginal, { color: theme.textSecondary }]} numberOfLines={2}>
+                  "{replyingTo.content}"
+                </Text>
+              )}
+              <TextInput
+                style={[styles.replyInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                placeholder="Write a reply..."
+                placeholderTextColor={theme.textSecondary}
+                value={replyContent}
+                onChangeText={setReplyContent}
+                multiline
+                maxLength={300}
+                autoFocus
+                textAlignVertical="top"
+              />
+              <View style={styles.replyModalFooter}>
+                <Text style={[styles.replyCharCount, { color: theme.textSecondary }]}>
+                  {replyContent.length}/300
+                </Text>
+                <Pressable
+                  style={[styles.replySendBtn, { backgroundColor: theme.tint, opacity: replyContent.trim().length > 0 ? 1 : 0.5 }]}
+                  onPress={() => {
+                    if (replyingTo && replyContent.trim()) {
+                      replyMutation.mutate({ messageId: replyingTo.id, content: replyContent.trim() });
+                    }
+                  }}
+                  disabled={!replyContent.trim() || replyMutation.isPending}
+                >
+                  {replyMutation.isPending ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <>
+                      <Feather name="send" size={14} color="#fff" />
+                      <Text style={styles.replySendText}>Reply</Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
             </View>
-            {replyingTo && (
-              <Text style={[styles.replyOriginal, { color: theme.textSecondary }]} numberOfLines={2}>
-                "{replyingTo.content}"
-              </Text>
-            )}
-            <TextInput
-              style={[styles.replyInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-              placeholder="Write a reply..."
-              placeholderTextColor={theme.textSecondary}
-              value={replyContent}
-              onChangeText={setReplyContent}
-              multiline
-              maxLength={300}
-              autoFocus
-              textAlignVertical="top"
-            />
-            <View style={styles.replyModalFooter}>
-              <Text style={[styles.replyCharCount, { color: theme.textSecondary }]}>
-                {replyContent.length}/300
-              </Text>
-              <Pressable
-                style={[styles.replySendBtn, { backgroundColor: theme.tint, opacity: replyContent.trim().length > 0 ? 1 : 0.5 }]}
-                onPress={() => {
-                  if (replyingTo && replyContent.trim()) {
-                    replyMutation.mutate({ messageId: replyingTo.id, content: replyContent.trim() });
-                  }
-                }}
-                disabled={!replyContent.trim() || replyMutation.isPending}
-              >
-                {replyMutation.isPending ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <>
-                    <Feather name="send" size={14} color="#fff" />
-                    <Text style={styles.replySendText}>Reply</Text>
-                  </>
-                )}
-              </Pressable>
-            </View>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -500,7 +511,13 @@ const styles = StyleSheet.create({
   replyModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  replyModalScrollContent: {
+    flexGrow: 1,
     justifyContent: "flex-end",
+  },
+  replyModalSpacer: {
+    flex: 1,
   },
   replyModalContent: {
     borderTopLeftRadius: 20,

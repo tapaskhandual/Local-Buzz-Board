@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   StyleSheet, Text, View, TextInput, Pressable,
   useColorScheme, ActivityIndicator, Platform,
+  KeyboardAvoidingView, ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,93 +66,105 @@ export default function ComposeScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="What's happening in your area?"
-          placeholderTextColor={theme.textSecondary}
-          value={content}
-          onChangeText={setContent}
-          multiline
-          maxLength={500}
-          autoFocus
-          textAlignVertical="top"
-        />
-        <Text style={[styles.charCount, { color: theme.textSecondary }]}>
-          {content.length}/500
-        </Text>
-      </View>
-
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>Category</Text>
-      <View style={styles.categories}>
-        {CATEGORIES.map((cat) => (
-          <Pressable
-            key={cat.id}
-            style={[
-              styles.categoryChip,
-              {
-                backgroundColor: category === cat.id ? theme.tint : theme.surface,
-                borderColor: category === cat.id ? theme.tint : theme.border,
-              },
-            ]}
-            onPress={() => setCategory(cat.id)}
-          >
-            <Feather
-              name={cat.icon as any}
-              size={14}
-              color={category === cat.id ? "#fff" : theme.textSecondary}
-            />
-            <Text
-              style={[
-                styles.categoryLabel,
-                { color: category === cat.id ? "#fff" : theme.text },
-              ]}
-            >
-              {cat.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-      <View style={styles.footer}>
-        <View style={styles.locationInfo}>
-          <Feather name="map-pin" size={14} color={theme.textSecondary} />
-          <Text style={[styles.locationText, { color: theme.textSecondary }]}>
-            {location ? "Location attached" : "Getting location..."}
+    <KeyboardAvoidingView
+      style={[styles.flex, { backgroundColor: theme.background }]}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
+    >
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={[styles.card, { backgroundColor: theme.surface }]}>
+          <TextInput
+            style={[styles.input, { color: theme.text }]}
+            placeholder="What's happening in your area?"
+            placeholderTextColor={theme.textSecondary}
+            value={content}
+            onChangeText={setContent}
+            multiline
+            maxLength={500}
+            autoFocus
+            textAlignVertical="top"
+          />
+          <Text style={[styles.charCount, { color: theme.textSecondary }]}>
+            {content.length}/500
           </Text>
         </View>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.postButton,
-            { backgroundColor: theme.tint, opacity: pressed ? 0.9 : 1 },
-          ]}
-          onPress={handlePost}
-          disabled={mutation.isPending}
-        >
-          {mutation.isPending ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Feather name="send" size={16} color="#fff" />
-              <Text style={styles.postButtonText}>Post</Text>
-            </>
-          )}
-        </Pressable>
-      </View>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Category</Text>
+        <View style={styles.categories}>
+          {CATEGORIES.map((cat) => (
+            <Pressable
+              key={cat.id}
+              style={[
+                styles.categoryChip,
+                {
+                  backgroundColor: category === cat.id ? theme.tint : theme.surface,
+                  borderColor: category === cat.id ? theme.tint : theme.border,
+                },
+              ]}
+              onPress={() => setCategory(cat.id)}
+            >
+              <Feather
+                name={cat.icon as any}
+                size={14}
+                color={category === cat.id ? "#fff" : theme.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.categoryLabel,
+                  { color: category === cat.id ? "#fff" : theme.text },
+                ]}
+              >
+                {cat.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
-      <Text style={[styles.disclaimer, { color: theme.textSecondary }]}>
-        This post will be visible to nearby users and auto-delete after 24 hours.
-      </Text>
-    </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <View style={styles.footer}>
+          <View style={styles.locationInfo}>
+            <Feather name="map-pin" size={14} color={theme.textSecondary} />
+            <Text style={[styles.locationText, { color: theme.textSecondary }]}>
+              {location ? "Location attached" : "Getting location..."}
+            </Text>
+          </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.postButton,
+              { backgroundColor: theme.tint, opacity: pressed ? 0.9 : 1 },
+            ]}
+            onPress={handlePost}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Feather name="send" size={16} color="#fff" />
+                <Text style={styles.postButtonText}>Post</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+
+        <Text style={[styles.disclaimer, { color: theme.textSecondary }]}>
+          This post will be visible to nearby users and auto-delete after 24 hours.
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 16 },
+  flex: { flex: 1 },
+  container: { flexGrow: 1, padding: 16, gap: 16, paddingBottom: 40 },
   card: {
     borderRadius: 16,
     padding: 16,

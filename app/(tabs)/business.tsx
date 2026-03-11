@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   StyleSheet, Text, View, FlatList, Pressable, RefreshControl,
   useColorScheme, ActivityIndicator, TextInput, Modal, Platform,
+  KeyboardAvoidingView, ScrollView,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -209,91 +210,111 @@ export default function BusinessScreen() {
       )}
 
       <Modal visible={showSetup} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>Register Business</Text>
-              <Pressable onPress={() => setShowSetup(false)}>
-                <Feather name="x" size={24} color={theme.text} />
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="padding"
+        >
+          <ScrollView
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
+            <View style={styles.modalSpacer} />
+            <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>Register Business</Text>
+                <Pressable onPress={() => setShowSetup(false)}>
+                  <Feather name="x" size={24} color={theme.text} />
+                </Pressable>
+              </View>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                placeholder="Business Name"
+                placeholderTextColor={theme.textSecondary}
+                value={businessName}
+                onChangeText={setBusinessName}
+              />
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                placeholder="Category (e.g., Restaurant, Retail)"
+                placeholderTextColor={theme.textSecondary}
+                value={businessCat}
+                onChangeText={setBusinessCat}
+              />
+              <TextInput
+                style={[styles.input, styles.multiInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                placeholder="Description"
+                placeholderTextColor={theme.textSecondary}
+                value={businessDesc}
+                onChangeText={setBusinessDesc}
+                multiline
+                textAlignVertical="top"
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              <Pressable
+                style={[styles.submitBtn, { backgroundColor: theme.tint }]}
+                onPress={() => createProfileMutation.mutate({
+                  businessName: businessName.trim(),
+                  description: businessDesc.trim() || undefined,
+                  category: businessCat.trim() || undefined,
+                })}
+              >
+                <Text style={styles.submitBtnText}>Register</Text>
               </Pressable>
             </View>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-              placeholder="Business Name"
-              placeholderTextColor={theme.textSecondary}
-              value={businessName}
-              onChangeText={setBusinessName}
-            />
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-              placeholder="Category (e.g., Restaurant, Retail)"
-              placeholderTextColor={theme.textSecondary}
-              value={businessCat}
-              onChangeText={setBusinessCat}
-            />
-            <TextInput
-              style={[styles.input, styles.multiInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-              placeholder="Description"
-              placeholderTextColor={theme.textSecondary}
-              value={businessDesc}
-              onChangeText={setBusinessDesc}
-              multiline
-              textAlignVertical="top"
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <Pressable
-              style={[styles.submitBtn, { backgroundColor: theme.tint }]}
-              onPress={() => createProfileMutation.mutate({
-                businessName: businessName.trim(),
-                description: businessDesc.trim() || undefined,
-                category: businessCat.trim() || undefined,
-              })}
-            >
-              <Text style={styles.submitBtnText}>Register</Text>
-            </Pressable>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showPost} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>New Promotion</Text>
-              <Pressable onPress={() => setShowPost(false)}>
-                <Feather name="x" size={24} color={theme.text} />
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="padding"
+        >
+          <ScrollView
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
+            <View style={styles.modalSpacer} />
+            <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>New Promotion</Text>
+                <Pressable onPress={() => setShowPost(false)}>
+                  <Feather name="x" size={24} color={theme.text} />
+                </Pressable>
+              </View>
+              <TextInput
+                style={[styles.input, styles.multiInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+                placeholder="Write your promotion..."
+                placeholderTextColor={theme.textSecondary}
+                value={postContent}
+                onChangeText={setPostContent}
+                multiline
+                autoFocus
+                textAlignVertical="top"
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              <Pressable
+                style={[styles.submitBtn, { backgroundColor: theme.tint }]}
+                onPress={() => {
+                  if (!postContent.trim() || !location) return;
+                  createPostMutation.mutate({
+                    content: postContent.trim(),
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                  });
+                }}
+              >
+                {createPostMutation.isPending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitBtnText}>Post Promotion</Text>
+                )}
               </Pressable>
             </View>
-            <TextInput
-              style={[styles.input, styles.multiInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-              placeholder="Write your promotion..."
-              placeholderTextColor={theme.textSecondary}
-              value={postContent}
-              onChangeText={setPostContent}
-              multiline
-              autoFocus
-              textAlignVertical="top"
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <Pressable
-              style={[styles.submitBtn, { backgroundColor: theme.tint }]}
-              onPress={() => {
-                if (!postContent.trim() || !location) return;
-                createPostMutation.mutate({
-                  content: postContent.trim(),
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                });
-              }}
-            >
-              {createPostMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitBtnText}>Post Promotion</Text>
-              )}
-            </Pressable>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -365,7 +386,13 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalScrollContent: {
+    flexGrow: 1,
     justifyContent: "flex-end",
+  },
+  modalSpacer: {
+    flex: 1,
   },
   modalContent: {
     borderTopLeftRadius: 20,
