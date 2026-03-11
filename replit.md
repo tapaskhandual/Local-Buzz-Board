@@ -110,10 +110,17 @@ All screens with text inputs use `KeyboardAvoidingView` (behavior="padding") + `
 - `app/(tabs)/index.tsx`: Reply modal
 - Android: `softwareKeyboardLayoutMode: "pan"` set in app.json for better modal keyboard handling
 
+## Production Security
+- JWT_SECRET or SESSION_SECRET **must** be set (server will crash without it — no hardcoded fallback)
+- CORS: localhost origins only allowed in development, blocked in production
+- Error responses: sanitized — internal error details logged server-side only, not sent to clients
+- Response body logging: disabled in production to prevent PII leakage
+- RevenueCat verification: required in production (REVENUECAT_API_SECRET must be set)
+
 ## Notes
 - AdMob requires EAS native build; renders as no-op in Expo Go / web preview
 - RevenueCat requires EAS native build; falls back to mock activation on web
 - Server-side subscription verification: when REVENUECAT_API_SECRET is set, the server validates purchases against RevenueCat API before activating
 - Platform-specific files (.native.tsx / .web.tsx) prevent native-only modules from crashing web bundling
 - eas.json is configured for dev, preview, and production Android builds
-- JWT auth uses SESSION_SECRET as fallback (no need to set separate JWT_SECRET)
+- JWT auth uses JWT_SECRET or SESSION_SECRET (either must be set, no fallback)

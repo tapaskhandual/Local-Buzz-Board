@@ -6,7 +6,10 @@ import * as storage from "./storage";
 import { getBusyAreas } from "./busy-areas";
 import { insertUserSchema, insertMessageSchema, insertBusinessProfileSchema, insertBusinessPostSchema, insertReactionSchema, insertReportSchema } from "@shared/schema";
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "local-buzz-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET or SESSION_SECRET environment variable must be set");
+}
 const FREE_RADIUS_MILES = 5;
 const PREMIUM_RADIUS_MILES = 25;
 const MOD_RATE_LIMIT = 50;
@@ -74,7 +77,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { id: user.id, username: user.username, displayName: user.displayName, role: user.role, isPremium: user.isPremium },
       });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Registration error:", error);
+      return res.status(500).json({ message: "Registration failed. Please try again." });
     }
   });
 
@@ -101,7 +105,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { id: user.id, username: user.username, displayName: user.displayName, role: user.role, isPremium: user.isPremium, premiumTier: user.premiumTier },
       });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Login failed. Please try again." });
     }
   });
 
@@ -115,7 +120,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         warningCount: user.warningCount, createdAt: user.createdAt,
       });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -129,7 +135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: user.role, isPremium: user.isPremium,
       });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -149,7 +156,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createMessage(req.userId!, parsed.data);
       return res.status(201).json(message);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -171,7 +179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
       return res.json({ messages: messagesWithReactions, radius });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -180,7 +189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messages = await storage.getUserMessages(req.userId!);
       return res.json(messages);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -195,7 +205,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reaction = await storage.addReaction(req.userId!, req.params.id, parsed.data.type);
       return res.json(reaction);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -208,7 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const report = await storage.createReport(req.userId!, parsed.data);
       return res.status(201).json(report);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -219,7 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const replies = await storage.getRepliesForMessage(req.params.id);
       return res.json({ replies });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -250,7 +263,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       return res.status(201).json(reply);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -265,7 +279,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = await storage.createBusinessProfile(req.userId!, parsed.data);
       return res.status(201).json(profile);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -275,7 +290,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!profile) return res.status(404).json({ message: "No business profile" });
       return res.json(profile);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -283,10 +299,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const profile = await storage.getBusinessProfileByUserId(req.userId!);
       if (!profile) return res.status(404).json({ message: "No business profile" });
-      const updated = await storage.updateBusinessProfile(profile.id, req.body);
+      const { businessName, description, category } = req.body;
+      const allowedFields: Record<string, any> = {};
+      if (businessName !== undefined) allowedFields.businessName = businessName;
+      if (description !== undefined) allowedFields.description = description;
+      if (category !== undefined) allowedFields.category = category;
+      if (Object.keys(allowedFields).length === 0) return res.status(400).json({ message: "No valid fields to update" });
+      const updated = await storage.updateBusinessProfile(profile.id, allowedFields);
       return res.json(updated);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -304,7 +327,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const post = await storage.createBusinessPost(req.userId!, profile.id, parsed.data);
       return res.status(201).json(post);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -320,7 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const posts = await storage.getNearbyBusinessPosts(lat, lng, radius);
       return res.json({ posts, radius });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -332,6 +357,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!["monthly", "yearly", "lifetime"].includes(tier)) return res.status(400).json({ message: "Invalid tier" });
 
       const rcSecret = process.env.REVENUECAT_API_SECRET;
+      if (!rcSecret && process.env.NODE_ENV === "production") {
+        return res.status(503).json({ message: "Subscription service not configured" });
+      }
       if (rcSecret) {
         if (!revenuecatId) {
           return res.status(400).json({ message: "revenuecatId is required for subscription verification" });
@@ -363,7 +391,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUserById(req.userId!);
       return res.json({ message: "Subscription activated", user: { id: user!.id, isPremium: user!.isPremium, premiumTier: user!.premiumTier } });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -372,7 +401,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subs = await storage.getUserSubscriptions(req.userId!);
       return res.json(subs);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -384,7 +414,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.hideContent(req.userId!, targetType, req.params.id, req.body.reason || "No reason provided");
       return res.json({ message: "Content hidden" });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -394,7 +425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.unhideContent(req.userId!, targetType, req.params.id);
       return res.json({ message: "Content restored" });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -410,7 +442,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.warnUser(req.userId!, req.params.userId, req.body.reason || "No reason");
       return res.json({ message: "User warned" });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -424,16 +457,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.banUser(req.userId!, req.params.userId, req.body.reason || "No reason");
       return res.json({ message: "User banned" });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
   app.post("/api/moderation/unban/:userId", authMiddleware, requireRole("admin", "owner"), async (req: AuthRequest, res: Response) => {
     try {
+      const target = await storage.getUserById(req.params.userId);
+      if (!target) return res.status(404).json({ message: "User not found" });
+      if (!storage.canModerate(req.userRole!, target.role)) {
+        return res.status(403).json({ message: "Cannot unban users with equal or higher role" });
+      }
       await storage.unbanUser(req.userId!, req.params.userId);
       return res.json({ message: "User unbanned" });
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -442,7 +482,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reports = await storage.getPendingReports();
       return res.json(reports);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -455,7 +496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const report = await storage.reviewReport(req.params.id, req.userId!, status);
       return res.json(report);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -471,7 +513,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updated = await storage.changeUserRole(req.userId!, req.params.userId, role);
       return res.json(updated);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
@@ -480,7 +523,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const logs = await storage.getModerationLogs();
       return res.json(logs);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      console.error("Server error:", error);
+      return res.status(500).json({ message: "An unexpected error occurred" });
     }
   });
 
