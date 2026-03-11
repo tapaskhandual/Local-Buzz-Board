@@ -110,11 +110,11 @@ export default function AuthScreen() {
               secureTextEntry={!showPassword}
             />
             <Pressable
-              style={[styles.eyeButton, { backgroundColor: theme.background }]}
+              style={[styles.eyeButton, { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }]}
               onPress={() => setShowPassword(!showPassword)}
               hitSlop={8}
             >
-              <Feather name={showPassword ? "eye-off" : "eye"} size={22} color={theme.tint} />
+              <Feather name={showPassword ? "eye-off" : "eye"} size={20} color="#fff" />
             </Pressable>
           </View>
 
