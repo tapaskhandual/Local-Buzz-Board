@@ -134,25 +134,33 @@ export default function SettingsScreen() {
               </Pressable>
             </>
           ) : (
-            <View style={styles.subOptions}>
-              {[
-                { tier: "monthly", label: "Monthly", price: "$2.99/mo" },
-                { tier: "yearly", label: "Yearly", price: "$19.99/yr" },
-                { tier: "lifetime", label: "Lifetime", price: "$49.99" },
-              ].map((opt) => (
-                <Pressable
-                  key={opt.tier}
-                  style={({ pressed }) => [
-                    styles.subOption,
-                    { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
-                  ]}
-                  onPress={() => activateSubMutation.mutate(opt.tier)}
-                >
-                  <Text style={[styles.subLabel, { color: theme.text }]}>{opt.label}</Text>
-                  <Text style={[styles.subPrice, { color: theme.tint }]}>{opt.price}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <>
+              <View style={[styles.devNotice, { backgroundColor: theme.warning + "15", borderColor: theme.warning + "40" }]}>
+                <Feather name="info" size={14} color={theme.warning} />
+                <Text style={[styles.devNoticeText, { color: theme.textSecondary }]}>
+                  In-app purchases require a production build. These options activate premium for testing.
+                </Text>
+              </View>
+              <View style={styles.subOptions}>
+                {[
+                  { tier: "monthly", label: "Monthly", price: "$2.99/mo" },
+                  { tier: "yearly", label: "Yearly", price: "$19.99/yr" },
+                  { tier: "lifetime", label: "Lifetime", price: "$49.99" },
+                ].map((opt) => (
+                  <Pressable
+                    key={opt.tier}
+                    style={({ pressed }) => [
+                      styles.subOption,
+                      { borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
+                    ]}
+                    onPress={() => activateSubMutation.mutate(opt.tier)}
+                  >
+                    <Text style={[styles.subLabel, { color: theme.text }]}>{opt.label}</Text>
+                    <Text style={[styles.subPrice, { color: theme.tint }]}>{opt.price}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
           )}
         </View>
       )}
@@ -264,6 +272,19 @@ const styles = StyleSheet.create({
   subLabel: { fontSize: 13, fontWeight: "600" as const },
   subPrice: { fontSize: 14, fontWeight: "700" as const },
   subNote: { fontSize: 12, textAlign: "center" as const },
+  devNotice: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  devNoticeText: {
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 16,
+  },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",

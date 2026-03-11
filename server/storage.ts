@@ -67,7 +67,9 @@ export async function getNearbyMessages(lat: number, lng: number, radiusMiles: n
     latitude: messages.latitude,
     longitude: messages.longitude,
     category: messages.category,
+    parentId: messages.parentId,
     likesCount: messages.likesCount,
+    replyCount: messages.replyCount,
     flagCount: messages.flagCount,
     isHidden: messages.isHidden,
     hiddenBy: messages.hiddenBy,
@@ -81,7 +83,8 @@ export async function getNearbyMessages(lat: number, lng: number, radiusMiles: n
     .innerJoin(users, eq(messages.userId, users.id))
     .where(and(
       eq(messages.isHidden, false),
-      sql`${messages.expiresAt} > ${now}`
+      sql`${messages.expiresAt} > ${now}`,
+      sql`${messages.parentId} IS NULL`
     ))
     .orderBy(desc(messages.createdAt));
 
@@ -91,6 +94,74 @@ export async function getNearbyMessages(lat: number, lng: number, radiusMiles: n
       distance: haversineDistance(lat, lng, m.latitude, m.longitude),
     }))
     .filter(m => m.distance <= radiusMiles);
+}
+
+export async function getRepliesForMessage(messageId: string): Promise<(Message & { username: string; displayName: string | null })[]> {
+  const now = new Date();
+  return db.select({
+    id: messages.id,
+    userId: messages.userId,
+    content: messages.content,
+    latitude: messages.latitude,
+    longitude: messages.longitude,
+    category: messages.category,
+    parentId: messages.parentId,
+    likesCount: messages.likesCount,
+    replyCount: messages.replyCount,
+    flagCount: messages.flagCount,
+    isHidden: messages.isHidden,
+    hiddenBy: messages.hiddenBy,
+    hiddenReason: messages.hiddenReason,
+    createdAt: messages.createdAt,
+    expiresAt: messages.expiresAt,
+    username: users.username,
+    displayName: users.displayName,
+  })
+    .from(messages)
+    .innerJoin(users, eq(messages.userId, users.id))
+    .where(and(
+      eq(messages.parentId, messageId),
+      eq(messages.isHidden, false),
+      sql`${messages.expiresAt} > ${now}`
+    ))
+    .orderBy(messages.createdAt);
+}
+
+export async function createReply(userId: string, parentId: string, parentExpiresAt: Date, data: { content: string; latitude: number; longitude: number }): Promise<Message> {
+  const replyExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expiresAt = parentExpiresAt < replyExpiry ? parentExpiresAt : replyExpiry;
+  const [reply] = await db.insert(messages).values({
+    userId,
+    content: data.content,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    category: "general",
+    parentId,
+    expiresAt,
+  }).returning();
+  await db.update(messages)
+    .set({ replyCount: sql`${messages.replyCount} + 1` })
+    .where(eq(messages.id, parentId));
+  return reply;
+}
+
+export async function deleteRepliesForMessage(parentId: string): Promise<void> {
+  await db.delete(messages).where(eq(messages.parentId, parentId));
+}
+
+export async function getUserReactionsForMessages(userId: string, messageIds: string[]): Promise<Record<string, string>> {
+  if (messageIds.length === 0) return {};
+  const userReactions = await db.select({
+    messageId: reactions.messageId,
+    type: reactions.type,
+  }).from(reactions).where(
+    and(eq(reactions.userId, userId), sql`${reactions.messageId} = ANY(ARRAY[${sql.join(messageIds.map(id => sql`${id}`), sql`, `)}]::varchar[])`)
+  );
+  const map: Record<string, string> = {};
+  for (const r of userReactions) {
+    map[r.messageId] = r.type;
+  }
+  return map;
 }
 
 export async function getMessageById(id: string): Promise<Message | undefined> {
@@ -373,8 +444,8 @@ export async function getNearbyBusinessPosts(lat: number, lng: number, radiusMil
 
 export async function cleanExpiredMessages(): Promise<number> {
   const now = new Date();
-  const deleted = await db.delete(messages).where(lt(messages.expiresAt, now)).returning();
-  return deleted.length;
+  const expired = await db.delete(messages).where(lt(messages.expiresAt, now)).returning();
+  return expired.length;
 }
 
 export async function getUserMessages(userId: string): Promise<Message[]> {

@@ -47,6 +47,17 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!Purchases || !REVENUECAT_API_KEY || Platform.OS === "web") return;
 
+    const isExpoGo = typeof global !== "undefined" && !!(global as any).expo?.modules;
+    const Constants = (() => {
+      try { return require("expo-constants").default; } catch { return null; }
+    })();
+    const runningInExpoGo = isExpoGo || Constants?.appOwnership === "expo";
+
+    if (runningInExpoGo) {
+      console.log("Running in Expo Go — skipping RevenueCat native configuration. Use a development build for purchases.");
+      return;
+    }
+
     async function init() {
       try {
         if (LOG_LEVEL) {

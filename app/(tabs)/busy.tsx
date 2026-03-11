@@ -1,7 +1,7 @@
 import React from "react";
 import {
   StyleSheet, Text, View, FlatList, Pressable, RefreshControl,
-  useColorScheme, Platform, ActivityIndicator, Dimensions,
+  useColorScheme, Platform, ActivityIndicator, Dimensions, Linking,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -186,6 +186,26 @@ export default function BusyAreasScreen() {
     );
   }
 
+  function getTimeContext(): string {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 12) return "Morning estimates - dining spots may be quieter";
+    if (hour >= 12 && hour < 17) return "Afternoon estimates - lunch spots may be busier";
+    if (hour >= 17 && hour < 21) return "Evening estimates - dining & nightlife picking up";
+    return "Night estimates - nightlife spots at peak activity";
+  }
+
+  function openInMaps(lat: number, lng: number, name: string) {
+    const encodedName = encodeURIComponent(name);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${encodedName}&ll=${lat},${lng}`,
+      android: `geo:${lat},${lng}?q=${lat},${lng}(${encodedName})`,
+      default: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`,
+    });
+    if (url) Linking.openURL(url).catch(() => {
+      Linking.openURL(`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`);
+    });
+  }
+
   function renderBusyArea({ item, index }: { item: BusyArea; index: number }) {
     const config = BUSYNESS_CONFIG[item.busynessLevel];
     const venueTypeEntries = Object.entries(item.venueTypes).sort((a, b) => b[1] - a[1]);
@@ -194,7 +214,10 @@ export default function BusyAreasScreen() {
       : `${item.distance.toFixed(1)}mi`;
 
     return (
-      <View style={[styles.card, { backgroundColor: theme.surface, shadowColor: theme.cardShadow }]}>
+      <Pressable
+        onPress={() => openInMaps(item.lat, item.lng, item.name)}
+        style={({ pressed }) => [styles.card, { backgroundColor: theme.surface, shadowColor: theme.cardShadow, opacity: pressed ? 0.85 : 1 }]}
+      >
         <View style={styles.cardRow}>
           <View style={[styles.rankBadge, { backgroundColor: config.color + config.bgOpacity }]}>
             <Text style={[styles.rankText, { color: config.color }]}>#{index + 1}</Text>
@@ -236,9 +259,14 @@ export default function BusyAreasScreen() {
                 {item.topVenues.join(" · ")}
               </Text>
             )}
+
+            <View style={styles.openMapRow}>
+              <Feather name="external-link" size={10} color={theme.tint} />
+              <Text style={[styles.openMapText, { color: theme.tint }]}>Open in Maps</Text>
+            </View>
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   }
 
@@ -271,6 +299,14 @@ export default function BusyAreasScreen() {
                 userLng={location.longitude}
                 theme={theme}
               />
+            )}
+            {data && data.areas.length > 0 && (
+              <View style={[styles.timeContextBanner, { backgroundColor: theme.accent }]}>
+                <Feather name="clock" size={12} color={theme.textSecondary} />
+                <Text style={[styles.timeContextText, { color: theme.textSecondary }]}>
+                  {getTimeContext()}
+                </Text>
+              </View>
             )}
           </View>
         }
@@ -464,6 +500,28 @@ const styles = StyleSheet.create({
   topVenuesText: {
     fontSize: 11,
     fontStyle: "italic" as const,
+  },
+  openMapRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+    marginTop: 2,
+  },
+  openMapText: {
+    fontSize: 11,
+    fontWeight: "500" as const,
+  },
+  timeContextBanner: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  timeContextText: {
+    fontSize: 12,
   },
   emptyTitle: { fontSize: 20, fontWeight: "700" as const },
   emptyText: { fontSize: 15, textAlign: "center" as const, lineHeight: 22 },

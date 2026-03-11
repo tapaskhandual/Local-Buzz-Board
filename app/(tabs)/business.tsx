@@ -169,7 +169,9 @@ export default function BusinessScreen() {
                   disabled={purchaseLoading}
                 >
                   <Feather name="star" size={14} color="#fff" />
-                  <Text style={styles.smallBtnText}>Subscribe</Text>
+                  <Text style={styles.smallBtnText}>
+                    {purchasesReady ? "Subscribe" : "Activate (Test)"}
+                  </Text>
                 </Pressable>
               )}
             </View>

@@ -163,7 +163,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUserById(req.userId!);
       const radius = user?.isPremium ? PREMIUM_RADIUS_MILES : FREE_RADIUS_MILES;
       const messages = await storage.getNearbyMessages(lat, lng, radius);
-      return res.json({ messages, radius });
+      const messageIds = messages.map(m => m.id);
+      const userReactions = await storage.getUserReactionsForMessages(req.userId!, messageIds);
+      const messagesWithReactions = messages.map(m => ({
+        ...m,
+        userReaction: userReactions[m.id] || null,
+      }));
+      return res.json({ messages: messagesWithReactions, radius });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -201,6 +207,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const report = await storage.createReport(req.userId!, parsed.data);
       return res.status(201).json(report);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/messages/:id/replies", authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+      const message = await storage.getMessageById(req.params.id);
+      if (!message) return res.status(404).json({ message: "Message not found" });
+      const replies = await storage.getRepliesForMessage(req.params.id);
+      return res.json({ replies });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/messages/:id/reply", authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+      const user = await storage.getUserById(req.userId!);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      if (user.isBanned) return res.status(403).json({ message: "Account banned" });
+      const parent = await storage.getMessageById(req.params.id);
+      if (!parent) return res.status(404).json({ message: "Message not found" });
+      if (parent.parentId) {
+        return res.status(400).json({ message: "Cannot reply to a reply" });
+      }
+      const { content } = req.body;
+      if (!content || typeof content !== "string" || content.trim().length === 0) {
+        return res.status(400).json({ message: "Reply content is required" });
+      }
+      if (content.trim().length > 300) {
+        return res.status(400).json({ message: "Reply too long (max 300 characters)" });
+      }
+      if (!filterContent(content)) {
+        return res.status(400).json({ message: "Content contains prohibited words" });
+      }
+      const reply = await storage.createReply(req.userId!, req.params.id, parent.expiresAt, {
+        content: content.trim(),
+        latitude: parent.latitude,
+        longitude: parent.longitude,
+      });
+      return res.status(201).json(reply);
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }

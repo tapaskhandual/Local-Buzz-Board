@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet, Text, View, FlatList, Pressable, RefreshControl,
-  useColorScheme, Platform, ActivityIndicator,
+  useColorScheme, Platform, ActivityIndicator, TextInput, Modal,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,17 +29,28 @@ const REACTIONS = [
   { type: "warning", icon: "alert-circle", label: "Warning" },
 ];
 
+interface ReplyItem {
+  id: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  username: string;
+  displayName: string | null;
+}
+
 interface MessageItem {
   id: string;
   userId: string;
   content: string;
   category: string;
   likesCount: number;
+  replyCount: number;
   flagCount: number;
   createdAt: string;
   distance: number;
   username: string;
   displayName: string | null;
+  userReaction: string | null;
 }
 
 export default function FeedScreen() {
@@ -51,6 +62,10 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const [replyingTo, setReplyingTo] = useState<MessageItem | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
@@ -78,6 +93,17 @@ export default function FeedScreen() {
       authPost(`/api/messages/${messageId}/report`, { reason }),
   });
 
+  const replyMutation = useMutation({
+    mutationFn: ({ messageId, content }: { messageId: string; content: string }) =>
+      authPost(`/api/messages/${messageId}/reply`, { content }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/nearby"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/replies", variables.messageId] });
+      setReplyingTo(null);
+      setReplyContent("");
+    },
+  });
+
   function timeAgo(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
@@ -86,6 +112,15 @@ export default function FeedScreen() {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return "1d ago";
+  }
+
+  function toggleReplies(messageId: string) {
+    setExpandedReplies(prev => {
+      const next = new Set(prev);
+      if (next.has(messageId)) next.delete(messageId);
+      else next.add(messageId);
+      return next;
+    });
   }
 
   if (!permissionStatus || permissionStatus !== "granted") {
@@ -117,6 +152,7 @@ export default function FeedScreen() {
 
   function renderMessage({ item }: { item: MessageItem }) {
     const catIcon = CATEGORY_ICONS[item.category] || "message-circle";
+    const isExpanded = expandedReplies.has(item.id);
     return (
       <View style={[styles.card, { backgroundColor: theme.surface, shadowColor: theme.cardShadow }]}>
         <View style={styles.cardHeader}>
@@ -141,30 +177,69 @@ export default function FeedScreen() {
         <Text style={[styles.content, { color: theme.text }]}>{item.content}</Text>
 
         <View style={styles.cardActions}>
-          {REACTIONS.map((r) => (
-            <Pressable
-              key={r.type}
-              style={[styles.reactionBtn, { backgroundColor: theme.background }]}
-              onPress={() => reactMutation.mutate({ messageId: item.id, type: r.type })}
-            >
-              <Feather name={r.icon as any} size={14} color={theme.textSecondary} />
-              <Text style={[styles.reactionLabel, { color: theme.textSecondary }]}>{r.label}</Text>
+          {REACTIONS.map((r) => {
+            const isActive = item.userReaction === r.type;
+            return (
+              <Pressable
+                key={r.type}
+                style={[
+                  styles.reactionBtn,
+                  {
+                    backgroundColor: isActive ? theme.tint + "20" : theme.background,
+                    borderWidth: isActive ? 1 : 0,
+                    borderColor: isActive ? theme.tint + "40" : "transparent",
+                  },
+                ]}
+                onPress={() => reactMutation.mutate({ messageId: item.id, type: r.type })}
+              >
+                <Feather
+                  name={r.icon as any}
+                  size={14}
+                  color={isActive ? theme.tint : theme.textSecondary}
+                />
+                <Text style={[styles.reactionLabel, { color: isActive ? theme.tint : theme.textSecondary, fontWeight: isActive ? "700" : "500" }]}>
+                  {r.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.bottomRow}>
+          <Pressable
+            style={styles.replyTrigger}
+            onPress={() => setReplyingTo(item)}
+          >
+            <Feather name="message-square" size={13} color={theme.textSecondary} />
+            <Text style={[styles.replyTriggerText, { color: theme.textSecondary }]}>Reply</Text>
+          </Pressable>
+
+          {item.replyCount > 0 && (
+            <Pressable onPress={() => toggleReplies(item.id)} style={styles.replyTrigger}>
+              <Feather name={isExpanded ? "chevron-up" : "chevron-down"} size={13} color={theme.tint} />
+              <Text style={[styles.replyTriggerText, { color: theme.tint }]}>
+                {item.replyCount} {item.replyCount === 1 ? "reply" : "replies"}
+              </Text>
             </Pressable>
-          ))}
+          )}
+
           <View style={{ flex: 1 }} />
+
           {item.likesCount > 0 && (
             <Text style={[styles.likeCount, { color: theme.textSecondary }]}>
               {item.likesCount}
             </Text>
           )}
+
           <Pressable
             style={[styles.reactionBtn, { backgroundColor: "#ef444415" }]}
             onPress={() => reportMutation.mutate({ messageId: item.id, reason: "inappropriate" })}
           >
             <Feather name="flag" size={14} color="#ef4444" />
-            <Text style={[styles.reactionLabel, { color: "#ef4444" }]}>Report</Text>
           </Pressable>
         </View>
+
+        {isExpanded && <RepliesSection messageId={item.id} theme={theme} timeAgo={timeAgo} />}
       </View>
     );
   }
@@ -218,6 +293,97 @@ export default function FeedScreen() {
       >
         <Feather name="plus" size={24} color="#fff" />
       </Pressable>
+
+      <Modal visible={!!replyingTo} animationType="slide" transparent>
+        <View style={styles.replyModalOverlay}>
+          <View style={[styles.replyModalContent, { backgroundColor: theme.surface }]}>
+            <View style={styles.replyModalHeader}>
+              <Text style={[styles.replyModalTitle, { color: theme.text }]}>
+                Reply to {replyingTo?.displayName || replyingTo?.username}
+              </Text>
+              <Pressable onPress={() => { setReplyingTo(null); setReplyContent(""); }}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+            {replyingTo && (
+              <Text style={[styles.replyOriginal, { color: theme.textSecondary }]} numberOfLines={2}>
+                "{replyingTo.content}"
+              </Text>
+            )}
+            <TextInput
+              style={[styles.replyInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+              placeholder="Write a reply..."
+              placeholderTextColor={theme.textSecondary}
+              value={replyContent}
+              onChangeText={setReplyContent}
+              multiline
+              maxLength={300}
+              autoFocus
+              textAlignVertical="top"
+            />
+            <View style={styles.replyModalFooter}>
+              <Text style={[styles.replyCharCount, { color: theme.textSecondary }]}>
+                {replyContent.length}/300
+              </Text>
+              <Pressable
+                style={[styles.replySendBtn, { backgroundColor: theme.tint, opacity: replyContent.trim().length > 0 ? 1 : 0.5 }]}
+                onPress={() => {
+                  if (replyingTo && replyContent.trim()) {
+                    replyMutation.mutate({ messageId: replyingTo.id, content: replyContent.trim() });
+                  }
+                }}
+                disabled={!replyContent.trim() || replyMutation.isPending}
+              >
+                {replyMutation.isPending ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Feather name="send" size={14} color="#fff" />
+                    <Text style={styles.replySendText}>Reply</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+function RepliesSection({ messageId, theme, timeAgo }: { messageId: string; theme: typeof Colors.dark; timeAgo: (d: string) => string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/messages/replies", messageId],
+    queryFn: () => authGet<{ replies: ReplyItem[] }>(`/api/messages/${messageId}/replies`),
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.repliesContainer}>
+        <ActivityIndicator size="small" color={theme.tint} />
+      </View>
+    );
+  }
+
+  if (!data?.replies?.length) {
+    return null;
+  }
+
+  return (
+    <View style={styles.repliesContainer}>
+      {data.replies.map((reply) => (
+        <View key={reply.id} style={[styles.replyCard, { backgroundColor: theme.background }]}>
+          <View style={styles.replyHeader}>
+            <Text style={[styles.replyAuthor, { color: theme.text }]}>
+              {reply.displayName || reply.username}
+            </Text>
+            <Text style={[styles.replyTime, { color: theme.textSecondary }]}>
+              {timeAgo(reply.createdAt)}
+            </Text>
+          </View>
+          <Text style={[styles.replyText, { color: theme.text }]}>{reply.content}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -272,7 +438,9 @@ const styles = StyleSheet.create({
   cardActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
+    flexWrap: "wrap",
+    marginBottom: 8,
   },
   reactionBtn: {
     flexDirection: "row",
@@ -286,7 +454,104 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500" as const,
   },
+  bottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  replyTrigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  replyTriggerText: {
+    fontSize: 12,
+    fontWeight: "500" as const,
+  },
   likeCount: { fontSize: 13, fontWeight: "500" as const },
+  repliesContainer: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(128,128,128,0.15)",
+    gap: 8,
+  },
+  replyCard: {
+    padding: 10,
+    borderRadius: 10,
+  },
+  replyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  replyAuthor: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+  },
+  replyTime: {
+    fontSize: 10,
+  },
+  replyText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  replyModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  replyModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    gap: 12,
+  },
+  replyModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  replyModalTitle: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+  },
+  replyOriginal: {
+    fontSize: 13,
+    fontStyle: "italic" as const,
+    lineHeight: 18,
+  },
+  replyInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
+    fontSize: 15,
+    minHeight: 80,
+  },
+  replyModalFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  replyCharCount: {
+    fontSize: 12,
+  },
+  replySendBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  replySendText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
   emptyTitle: { fontSize: 20, fontWeight: "700" as const },
   emptyText: { fontSize: 15, textAlign: "center" as const, lineHeight: 22 },
   actionButton: {

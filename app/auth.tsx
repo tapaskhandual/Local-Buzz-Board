@@ -22,6 +22,7 @@ export default function AuthScreen() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit() {
     if (!username.trim() || !password.trim()) {
@@ -93,14 +94,22 @@ export default function AuthScreen() {
           autoCorrect={false}
         />
 
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
-          placeholder="Password"
-          placeholderTextColor={theme.textSecondary}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.passwordInput, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]}
+            placeholder="Password"
+            placeholderTextColor={theme.textSecondary}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <Pressable
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Feather name={showPassword ? "eye-off" : "eye"} size={20} color={theme.textSecondary} />
+          </Pressable>
+        </View>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -173,6 +182,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     borderWidth: 1,
+  },
+  passwordContainer: {
+    position: "relative" as const,
+  },
+  passwordInput: {
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingRight: 48,
+    fontSize: 16,
+    borderWidth: 1,
+  },
+  eyeButton: {
+    position: "absolute" as const,
+    right: 12,
+    top: 14,
   },
   button: {
     height: 48,
