@@ -220,11 +220,9 @@ export default function BusyAreasScreen() {
     const config = BUSYNESS_CONFIG[item.busynessLevel];
     const venueTypeEntries = Object.entries(item.venueTypes).sort((a, b) => b[1] - a[1]);
 
-    const showRoute = item.routeDistance != null;
-    const displayDist = showRoute ? item.routeDistance! : item.distance;
-    const distLabel = displayDist < 1
-      ? `${Math.round(displayDist * 5280)}ft`
-      : `${displayDist.toFixed(1)}mi`;
+    const straightDist = item.distance < 1
+      ? `${Math.round(item.distance * 5280)}ft`
+      : `${item.distance.toFixed(1)}mi`;
 
     return (
       <Pressable
@@ -247,8 +245,8 @@ export default function BusyAreasScreen() {
 
             <View style={styles.statsRow}>
               <View style={styles.stat}>
-                <Feather name={showRoute ? "truck" : "navigation"} size={12} color={theme.textSecondary} />
-                <Text style={[styles.statText, { color: theme.textSecondary }]}>{distLabel} {item.direction}</Text>
+                <Feather name="navigation" size={12} color={theme.textSecondary} />
+                <Text style={[styles.statText, { color: theme.textSecondary }]}>{straightDist} {item.direction}</Text>
               </View>
               {item.routeDuration != null && (
                 <View style={styles.stat}>
@@ -295,7 +293,7 @@ export default function BusyAreasScreen() {
         <View style={[styles.radiusBanner, { backgroundColor: theme.accent }]}>
           <Feather name="radio" size={14} color={theme.tint} />
           <Text style={[styles.radiusText, { color: theme.tint }]}>
-            {user?.isPremium ? "Premium" : "Free"} - Showing hotspots within {data.radius} miles
+            {user?.isPremium ? "Premium" : "Free"} - Showing hotspots within {data.radius} miles (straight-line distance)
           </Text>
         </View>
       )}
