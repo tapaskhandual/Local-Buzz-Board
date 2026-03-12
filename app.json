@@ -23,7 +23,12 @@
     "android": {
       "package": "com.localbuzz.app",
       "softwareKeyboardLayoutMode": "pan",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#1a1a2e",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -59,6 +64,14 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://localbuzz.app/"
+      },
+      "eas": {
+        "projectId": "388eb5e8-69b8-43c3-a7cf-c5d758671516"
+      }
     }
   }
 }
