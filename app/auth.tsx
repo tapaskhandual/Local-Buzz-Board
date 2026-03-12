@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import Colors from "@/constants/colors";
 
 export default function AuthScreen() {
-  const { login, register } = useAuth();
+  const { login, register, sessionExpired } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
@@ -73,6 +73,15 @@ export default function AuthScreen() {
             Connect with your neighborhood
           </Text>
         </View>
+
+        {sessionExpired && (
+          <View style={[styles.sessionBanner, { backgroundColor: theme.tint + "15", borderColor: theme.tint + "40" }]}>
+            <Feather name="clock" size={16} color={theme.tint} />
+            <Text style={[styles.sessionBannerText, { color: theme.text }]}>
+              Your session has expired. Please sign in again to continue.
+            </Text>
+          </View>
+        )}
 
         <View style={[styles.form, { backgroundColor: theme.surface }]}>
           <Text style={[styles.formTitle, { color: theme.text }]}>
@@ -141,6 +150,10 @@ export default function AuthScreen() {
             </Text>
           </Pressable>
         </View>
+
+        <Text style={[styles.sessionNote, { color: theme.textSecondary }]}>
+          For security, you'll be asked to sign in again every 30 days. Your account and data are always saved.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -232,5 +245,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center" as const,
     marginTop: 4,
+  },
+  sessionBanner: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  sessionBannerText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  sessionNote: {
+    fontSize: 12,
+    textAlign: "center" as const,
+    marginTop: 20,
+    paddingHorizontal: 16,
+    lineHeight: 18,
   },
 });

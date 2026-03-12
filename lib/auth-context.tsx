@@ -17,6 +17,7 @@ interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
+  sessionExpired: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string, displayName?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   isLoading: true,
+  sessionExpired: false,
   login: async () => {},
   register: async () => {},
   logout: async () => {},
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     loadStoredAuth();
@@ -62,6 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           await AsyncStorage.removeItem("auth_token");
           setToken(null);
+          if (res.status === 401) {
+            setSessionExpired(true);
+          }
         }
       }
     } catch (e) {
@@ -87,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem("auth_token", data.token);
     setToken(data.token);
     setUser(data.user);
+    setSessionExpired(false);
   }, []);
 
   const register = useCallback(async (username: string, password: string, displayName?: string) => {
@@ -105,12 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem("auth_token", data.token);
     setToken(data.token);
     setUser(data.user);
+    setSessionExpired(false);
   }, []);
 
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem("auth_token");
     setToken(null);
     setUser(null);
+    setSessionExpired(false);
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -124,6 +133,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
+      } else if (res.status === 401) {
+        await AsyncStorage.removeItem("auth_token");
+        setToken(null);
+        setUser(null);
+        setSessionExpired(true);
       }
     } catch (e) {
       console.error("Refresh user error:", e);
@@ -131,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading, sessionExpired, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

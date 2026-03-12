@@ -351,15 +351,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subscriptions/activate", authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
-      const { type, tier, purchaseToken, revenuecatId } = req.body;
-      if (!type || !tier) return res.status(400).json({ message: "type and tier required" });
-      if (!["user", "business"].includes(type)) return res.status(400).json({ message: "type must be user or business" });
-      if (!["monthly", "yearly", "lifetime"].includes(tier)) return res.status(400).json({ message: "Invalid tier" });
+      const { type: clientType, tier: clientTier, purchaseToken, revenuecatId } = req.body;
 
       const rcSecret = process.env.REVENUECAT_API_SECRET;
       if (!rcSecret && process.env.NODE_ENV === "production") {
         return res.status(503).json({ message: "Subscription service not configured" });
       }
+
+      let resolvedType: "user" | "business" = "user";
+      let resolvedTier: "monthly" | "yearly" | "lifetime" = "monthly";
+
       if (rcSecret) {
         if (!revenuecatId) {
           return res.status(400).json({ message: "revenuecatId is required for subscription verification" });
@@ -381,13 +382,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!premium || (premium.expires_date && new Date(premium.expires_date) < new Date())) {
             return res.status(403).json({ message: "No active subscription found in RevenueCat" });
           }
+
+          const productId = (premium.product_identifier || "").toLowerCase();
+          if (productId.includes("lifetime")) {
+            resolvedTier = "lifetime";
+          } else if (productId.includes("yearly") || productId.includes("annual")) {
+            resolvedTier = "yearly";
+          } else {
+            resolvedTier = "monthly";
+          }
+
+          if (productId.includes("business")) {
+            resolvedType = "business";
+          } else {
+            resolvedType = "user";
+          }
         } catch (rcError) {
           console.error("RevenueCat verification error:", rcError);
           return res.status(502).json({ message: "RevenueCat verification failed" });
         }
+      } else {
+        if (!clientType || !clientTier) return res.status(400).json({ message: "type and tier required" });
+        if (!["user", "business"].includes(clientType)) return res.status(400).json({ message: "type must be user or business" });
+        if (!["monthly", "yearly", "lifetime"].includes(clientTier)) return res.status(400).json({ message: "Invalid tier" });
+        resolvedType = clientType;
+        resolvedTier = clientTier;
       }
 
-      await storage.activateSubscription(req.userId!, type, tier, purchaseToken);
+      await storage.activateSubscription(req.userId!, resolvedType, resolvedTier, purchaseToken);
       const user = await storage.getUserById(req.userId!);
       return res.json({ message: "Subscription activated", user: { id: user!.id, isPremium: user!.isPremium, premiumTier: user!.premiumTier } });
     } catch (error: any) {

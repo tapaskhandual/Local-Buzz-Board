@@ -112,10 +112,12 @@ All screens with text inputs use `KeyboardAvoidingView` (behavior="padding") + `
 
 ## Production Security
 - JWT_SECRET or SESSION_SECRET **must** be set (server will crash without it — no hardcoded fallback)
+- JWT tokens expire after 30 days; the app detects expired sessions and shows a re-login banner
 - CORS: localhost origins only allowed in development, blocked in production
 - Error responses: sanitized — internal error details logged server-side only, not sent to clients
 - Response body logging: disabled in production to prevent PII leakage
 - RevenueCat verification: required in production (REVENUECAT_API_SECRET must be set)
+- Subscription tier/type derived server-side from RevenueCat product_identifier (not client-supplied) when REVENUECAT_API_SECRET is set
 
 ## Notes
 - AdMob requires EAS native build; renders as no-op in Expo Go / web preview
