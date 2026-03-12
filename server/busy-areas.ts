@@ -378,20 +378,29 @@ export async function getBusyAreas(lat: number, lng: number, radiusMiles: number
   }
 
   const currentHour = new Date().getHours();
-  const pois = await fetchPOIs(lat, lng, radiusMiles);
+  const fetchRadius = Math.ceil(radiusMiles * 1.4);
+  const pois = await fetchPOIs(lat, lng, fetchRadius);
   const allClusters = clusterPOIs(pois, lat, lng, currentHour);
 
-  const withinRadius = allClusters.filter(c => c.distance <= radiusMiles);
-  const capped = withinRadius.slice(0, 30);
+  const preFiltered = allClusters.filter(c => c.distance <= fetchRadius);
+  const capped = preFiltered.slice(0, 50);
 
   const clustersWithRoutes = await fetchRouteDistances(lat, lng, capped);
 
-  cache.set(cacheKey, { data: clustersWithRoutes, timestamp: Date.now() });
+  const withinRadius = clustersWithRoutes.filter(c => {
+    if (c.routeDistance != null) {
+      return c.routeDistance <= radiusMiles;
+    }
+    return c.distance <= radiusMiles * 0.7;
+  });
+  const finalCapped = withinRadius.slice(0, 30);
+
+  cache.set(cacheKey, { data: finalCapped, timestamp: Date.now() });
 
   if (cache.size > 100) {
     const oldestKey = cache.keys().next().value;
     if (oldestKey) cache.delete(oldestKey);
   }
 
-  return clustersWithRoutes;
+  return finalCapped;
 }
