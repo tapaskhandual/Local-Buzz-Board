@@ -68,7 +68,11 @@
     "extra": {
       "router": {
         "origin": "https://localbuzz.app/"
+      },
+      "eas": {
+        "projectId": "5408a52e-8fc7-4820-87ce-ab40786ac38a"
       }
-    }
+    },
+    "owner": "tapasswoyanprava"
   }
 }
