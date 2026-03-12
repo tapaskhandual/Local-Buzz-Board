@@ -68,9 +68,6 @@
     "extra": {
       "router": {
         "origin": "https://localbuzz.app/"
-      },
-      "eas": {
-        "projectId": "388eb5e8-69b8-43c3-a7cf-c5d758671516"
       }
     }
   }
