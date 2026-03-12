@@ -9,19 +9,31 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://local-buzz-board.onrender.com",
+        "EXPO_PUBLIC_REVENUECAT_KEY": "goog_HbuNwVYCTlLORDTXFTSHfuCvRJo"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://local-buzz-board.onrender.com",
+        "EXPO_PUBLIC_REVENUECAT_KEY": "goog_HbuNwVYCTlLORDTXFTSHfuCvRJo"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://local-buzz-board.onrender.com",
+        "EXPO_PUBLIC_REVENUECAT_KEY": "goog_HbuNwVYCTlLORDTXFTSHfuCvRJo"
+      }
     }
   },
   "submit": {
