@@ -10,21 +10,23 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-function buildPoolConfig(rawUrl: string): pg.PoolConfig {
+function cleanDatabaseUrl(rawUrl: string): string {
   try {
     const url = new URL(rawUrl);
     url.searchParams.delete("channel_binding");
-    return {
-      connectionString: url.toString(),
-      ssl: { rejectUnauthorized: false },
-    };
+    return url.toString();
   } catch {
-    return {
-      connectionString: rawUrl,
-      ssl: { rejectUnauthorized: false },
-    };
+    return rawUrl;
   }
 }
 
-export const pool = new Pool(buildPoolConfig(process.env.DATABASE_URL));
+const connectionString = cleanDatabaseUrl(process.env.DATABASE_URL);
+
+export const pool = new Pool({
+  connectionString,
+  ssl: process.env.DATABASE_URL.includes("neon.tech") || process.env.DATABASE_URL.includes("sslmode=require")
+    ? { rejectUnauthorized: false }
+    : undefined,
+});
+
 export const db = drizzle(pool, { schema });

@@ -1,5 +1,5 @@
 import { eq, and, sql, lt, desc, ne } from "drizzle-orm";
-import { db } from "./db";
+import { db, pool } from "./db";
 import {
   users, messages, businessProfiles, businessPosts,
   reactions, reports, moderationLogs, subscriptions,
@@ -483,4 +483,11 @@ export async function getUserSubscriptions(userId: string) {
   return db.select().from(subscriptions)
     .where(eq(subscriptions.userId, userId))
     .orderBy(desc(subscriptions.createdAt));
+}
+
+export async function debugDbCheck(): Promise<string[]> {
+  const result = await pool.query(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
+  );
+  return result.rows.map((r: any) => r.table_name);
 }

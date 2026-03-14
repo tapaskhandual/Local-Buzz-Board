@@ -56,6 +56,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  app.get("/api/debug/db", async (_req: Request, res: Response) => {
+    try {
+      const result = await storage.debugDbCheck();
+      res.json({ ok: true, tables: result });
+    } catch (error: any) {
+      res.status(500).json({ ok: false, error: error?.message, code: error?.code });
+    }
+  });
+
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
       const parsed = insertUserSchema.safeParse(req.body);
@@ -157,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(201).json(message);
     } catch (error: any) {
       console.error("Server error:", error);
-      return res.status(500).json({ message: "An unexpected error occurred" });
+      return res.status(500).json({ message: error?.message || "An unexpected error occurred" });
     }
   });
 
