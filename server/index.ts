@@ -1,6 +1,7 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { runStartupMigrations } from "./db";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -237,6 +238,8 @@ function setupErrorHandler(app: express.Application) {
 }
 
 (async () => {
+  await runStartupMigrations();
+
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
